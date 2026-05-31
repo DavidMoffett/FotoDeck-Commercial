@@ -13,6 +13,20 @@ import {
   makeDisplayImageFile,
 } from './fotodeckImageUtils'
 
+import {
+  fetchPurchasedImages,
+  createStripeCheckout,
+  updateCollection as apiUpdateCollection,
+  updateGalleryPrice,
+  uploadDisplayImage,
+  fetchImages,
+  fetchCollectionsEvents,
+  deleteImage as apiDeleteImage,
+  deleteGallery as apiDeleteGallery,
+  deleteCollection as apiDeleteCollection,
+  fetchAdminStats,
+} from './fotodeckApi'
+
 function getInitialView() {
   const pathname = window.location.pathname
 
@@ -386,17 +400,16 @@ function App() {
     setPurchasedStatus('Payment successful. Preparing your downloads...')
 
     try {
-      const response = await fetch(`/api/purchased-images?sessionId=${encodeURIComponent(sessionId)}`)
-      const result = await response.json()
+      const apiResponse = await fetchPurchasedImages(sessionId)
 
-      if (!response.ok || !result.ok) {
+      if (!apiResponse.ok) {
         setPurchasedImages([])
-        setPurchasedStatus(result.error || 'Purchased downloads could not be loaded')
+        setPurchasedStatus(apiResponse.error || 'Purchased downloads could not be loaded')
         setIsLoadingPurchasedImages(false)
         return
       }
 
-      const images = result.images || []
+      const images = apiResponse.result.images || []
 
       setPurchasedImages(images)
       setPurchasedStatus(
@@ -429,28 +442,20 @@ function App() {
     setCartStatus('Opening secure card checkout...')
 
     try {
-      const response = await fetch('/api/stripe-create-checkout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          collectionId: getCurrentCollectionId(),
-          eventId: getCurrentEventId(),
-          buyerEmail,
-          imageIds: cartItems.map((item) => item.id),
-        }),
+      const apiResponse = await createStripeCheckout({
+        collectionId: getCurrentCollectionId(),
+        eventId: getCurrentEventId(),
+        buyerEmail,
+        imageIds: cartItems.map((item) => item.id),
       })
 
-      const result = await response.json()
-
-      if (!response.ok || !result.ok || !result.checkoutUrl) {
-        setCartStatus(result.error || 'Card checkout could not be opened')
+      if (!apiResponse.ok || !apiResponse.result.checkoutUrl) {
+        setCartStatus(apiResponse.error || 'Card checkout could not be opened')
         setIsCheckingOut(false)
         return
       }
 
-      window.location.href = result.checkoutUrl
+      window.location.href = apiResponse.result.checkoutUrl
     } catch (error) {
       setCartStatus(error.message || 'Card checkout could not be opened')
       setIsCheckingOut(false)
@@ -488,20 +493,20 @@ function App() {
     setLoadStatus(`Loading saved photos for ${firstEvent.name || 'selected gallery'}...`)
 
     try {
-      const response = await fetch(
-        `/api/images?collectionId=${encodeURIComponent(collection.id)}&eventId=${encodeURIComponent(firstEvent.id)}`
-      )
-      const result = await response.json()
+      const apiResponse = await fetchImages({
+        collectionId: collection.id,
+        eventId: firstEvent.id,
+      })
 
-      if (!response.ok || !result.ok || !result.images || result.images.length === 0) {
+      if (!apiResponse.ok || !apiResponse.result.images || apiResponse.result.images.length === 0) {
         setPhotos([])
         setVisiblePhotoCount(24)
-        setLoadStatus(result.error || 'No saved photos found for this collection')
+        setLoadStatus(apiResponse.error || 'No saved photos found for this collection')
         return
       }
 
-      const savedPhotos = sortPhotosFirstFirst(result.images.map(mapSavedPhotoToPhoto))
-      const firstPhoto = result.images[0] || {}
+      const savedPhotos = sortPhotosFirstFirst(apiResponse.result.images.map(mapSavedPhotoToPhoto))
+      const firstPhoto = apiResponse.result.images[0] || {}
       const savedPrice = priceFromCents(firstPhoto.price_cents)
       const savedWatermark = firstPhoto.watermark_text || watermarkText || 'FOTODECK'
 
@@ -551,23 +556,15 @@ function App() {
     setCollectionEditStatus(`Saving ${nextName}...`)
 
     try {
-      const response = await fetch('/api/update-collection', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          collectionId,
-          collectionName: nextName,
-          price,
-          watermarkText: nextWatermark,
-        }),
+      const apiResponse = await apiUpdateCollection({
+        collectionId,
+        collectionName: nextName,
+        price,
+        watermarkText: nextWatermark,
       })
 
-      const result = await response.json()
-
-      if (!response.ok || !result.ok) {
-        setCollectionEditStatus(result.error || 'Collection could not be saved')
+      if (!apiResponse.ok) {
+        setCollectionEditStatus(apiResponse.error || 'Collection could not be saved')
         setIsSavingCollectionEdit(false)
         return
       }
@@ -621,27 +618,19 @@ function App() {
     setPriceStatus(`Saving price NZ$${price.toFixed(2)}...`)
 
     try {
-      const response = await fetch('/api/update-event-price', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          collectionId,
-          eventId,
-          price,
-        }),
+      const apiResponse = await updateGalleryPrice({
+        collectionId,
+        eventId,
+        price,
       })
 
-      const result = await response.json()
-
-      if (!response.ok || !result.ok) {
-        setPriceStatus(result.error || 'Price could not be updated')
+      if (!apiResponse.ok) {
+        setPriceStatus(apiResponse.error || 'Price could not be updated')
         setIsUpdatingPrice(false)
         return
       }
 
-      const updatedPriceCents = result.updated?.price_cents || Math.round(price * 100)
+      const updatedPriceCents = apiResponse.result.updated?.price_cents || Math.round(price * 100)
 
       setPhotos((currentPhotos) =>
         currentPhotos.map((photo) => ({
@@ -723,25 +712,22 @@ function App() {
         formData.append('watermarkText', watermarkText || 'FOTODECK')
         formData.append('price', singlePhotoPrice || '0')
 
-        const response = await fetch('/api/upload-display', {
-          method: 'POST',
-          body: formData,
+        const apiResponse = await uploadDisplayImage({
+          formData,
           signal: controller.signal,
         })
 
-        const result = await response.json()
-
-        if (!response.ok || !result.ok || !result.image) {
+        if (!apiResponse.ok || !apiResponse.result.image) {
           return {
             ok: false,
             fileName: file.name || `Photo ${index + 1}`,
-            error: result.error || `Upload failed on ${file.name || `photo ${index + 1}`}`,
+            error: apiResponse.error || `Upload failed on ${file.name || `photo ${index + 1}`}`,
           }
         }
 
         return {
           ok: true,
-          photo: mapSavedPhotoToPhoto(result.image),
+          photo: mapSavedPhotoToPhoto(apiResponse.result.image),
           fileName: file.name || `Photo ${index + 1}`,
           displaySize: displayFile.size || 0,
           deliverySize: file.size || 0,
@@ -847,21 +833,21 @@ function App() {
     setLoadStatus('Loading photos...')
 
     try {
-      const response = await fetch(
-        `/api/images?collectionId=${encodeURIComponent(collectionId)}&eventId=${encodeURIComponent(eventId)}`
-      )
-      const result = await response.json()
+      const apiResponse = await fetchImages({
+        collectionId,
+        eventId,
+      })
 
-      if (!response.ok || !result.ok || !result.images || result.images.length === 0) {
+      if (!apiResponse.ok || !apiResponse.result.images || apiResponse.result.images.length === 0) {
         setPhotos([])
         setVisiblePhotoCount(24)
         setCartItems([])
         setCartStatus('Cart is empty')
-        setLoadStatus(result.error || 'No photos found')
+        setLoadStatus(apiResponse.error || 'No photos found')
         return
       }
 
-      const savedPhotos = sortPhotosFirstFirst(result.images.map(mapSavedPhotoToPhoto))
+      const savedPhotos = sortPhotosFirstFirst(apiResponse.result.images.map(mapSavedPhotoToPhoto))
       const firstPhoto = savedPhotos[0]
       const savedPrice = priceFromCents(firstPhoto?.priceCents)
 
@@ -892,21 +878,21 @@ function App() {
     setLoadStatus(`Loading saved photos for ${eventName || 'selected gallery'}...`)
 
     try {
-      const response = await fetch(
-        `/api/images?collectionId=${encodeURIComponent(collectionId)}&eventId=${encodeURIComponent(eventId)}`
-      )
-      const result = await response.json()
+      const apiResponse = await fetchImages({
+        collectionId,
+        eventId,
+      })
 
-      if (!response.ok || !result.ok || !result.images || result.images.length === 0) {
+      if (!apiResponse.ok || !apiResponse.result.images || apiResponse.result.images.length === 0) {
         setPhotos([])
         setVisiblePhotoCount(24)
         setCartItems([])
         setCartStatus('Cart is empty')
-        setLoadStatus(result.error || 'No saved photos found for this gallery')
+        setLoadStatus(apiResponse.error || 'No saved photos found for this gallery')
         return
       }
 
-      const savedPhotos = sortPhotosFirstFirst(result.images.map(mapSavedPhotoToPhoto))
+      const savedPhotos = sortPhotosFirstFirst(apiResponse.result.images.map(mapSavedPhotoToPhoto))
       const savedPrice = priceFromCents(savedPhotos[0]?.priceCents)
 
       setPhotos(savedPhotos)
@@ -935,16 +921,16 @@ function App() {
           continue
         }
 
-        const response = await fetch(
-          `/api/images?collectionId=${encodeURIComponent(collection.id)}&eventId=${encodeURIComponent(event.id)}`
-        )
-        const result = await response.json()
+        const apiResponse = await fetchImages({
+          collectionId: collection.id,
+          eventId: event.id,
+        })
 
-        if (!response.ok || !result.ok || !result.images || result.images.length === 0) {
+        if (!apiResponse.ok || !apiResponse.result.images || apiResponse.result.images.length === 0) {
           continue
         }
 
-        const sortedImages = sortPhotosFirstFirst(result.images)
+        const sortedImages = sortPhotosFirstFirst(apiResponse.result.images)
         const firstImage = sortedImages[0]
 
         if (firstImage?.display_key) {
@@ -961,19 +947,18 @@ function App() {
     setSavedStatus('Loading collections...')
 
     try {
-      const response = await fetch('/api/collections-events')
-      const result = await response.json()
+      const apiResponse = await fetchCollectionsEvents()
 
-      if (!response.ok || !result.ok) {
+      if (!apiResponse.ok) {
         setSavedCollections([])
         setSavedEvents([])
         setEventCoverUrls({})
-        setSavedStatus(result.error || 'Collections could not be loaded')
+        setSavedStatus(apiResponse.error || 'Collections could not be loaded')
         return
       }
 
-      const nextCollections = result.collections || []
-      const nextEvents = result.events || []
+      const nextCollections = apiResponse.result.collections || []
+      const nextEvents = apiResponse.result.events || []
 
       setSavedCollections(nextCollections)
       setSavedEvents(nextEvents)
@@ -1040,20 +1025,12 @@ function App() {
     setDeleteStatus(`Deleting ${photo.name}...`)
 
     try {
-      const response = await fetch('/api/delete-image', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          imageId: photo.id,
-        }),
+      const apiResponse = await apiDeleteImage({
+        imageId: photo.id,
       })
 
-      const result = await response.json()
-
-      if (!response.ok || !result.ok) {
-        setDeleteStatus(result.error || `Could not delete ${photo.name}`)
+      if (!apiResponse.ok) {
+        setDeleteStatus(apiResponse.error || `Could not delete ${photo.name}`)
         setDeletingPhotoId('')
         return
       }
@@ -1095,22 +1072,14 @@ function App() {
     setDeleteStatus(`Deleting gallery ${event.name || 'Gallery'}...`)
 
     try {
-      const response = await fetch('/api/delete-event', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          collectionId: collection.id,
-          eventId: event.id,
-          confirmText: 'DELETE EVENT',
-        }),
+      const apiResponse = await apiDeleteGallery({
+        collectionId: collection.id,
+        eventId: event.id,
+        confirmText: 'DELETE EVENT',
       })
 
-      const result = await response.json()
-
-      if (!response.ok || !result.ok) {
-        setDeleteStatus(result.error || `Could not delete gallery ${event.name || 'Gallery'}`)
+      if (!apiResponse.ok) {
+        setDeleteStatus(apiResponse.error || `Could not delete gallery ${event.name || 'Gallery'}`)
         setDeletingEventId('')
         return
       }
@@ -1176,21 +1145,13 @@ function App() {
     setDeleteStatus(`Deleting collection ${collection.name || 'Collection'}...`)
 
     try {
-      const response = await fetch('/api/delete-collection', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          collectionId: collection.id,
-          confirmText: 'DELETE COLLECTION',
-        }),
+      const apiResponse = await apiDeleteCollection({
+        collectionId: collection.id,
+        confirmText: 'DELETE COLLECTION',
       })
 
-      const result = await response.json()
-
-      if (!response.ok || !result.ok) {
-        setDeleteStatus(result.error || `Could not delete collection ${collection.name || 'Collection'}`)
+      if (!apiResponse.ok) {
+        setDeleteStatus(apiResponse.error || `Could not delete collection ${collection.name || 'Collection'}`)
         setDeletingCollectionId('')
         return
       }
@@ -1235,24 +1196,22 @@ function App() {
     window.location.href = '/view'
   }
 
-
   async function handleOpenStats() {
     setIsStatsOpen(true)
     setIsLoadingStats(true)
     setStatsStatus('Loading stats...')
 
     try {
-      const response = await fetch('/api/admin-stats')
-      const result = await response.json()
+      const apiResponse = await fetchAdminStats()
 
-      if (!response.ok || !result.ok) {
+      if (!apiResponse.ok) {
         setStatsData(null)
-        setStatsStatus(result.error || 'Stats could not be loaded')
+        setStatsStatus(apiResponse.error || 'Stats could not be loaded')
         setIsLoadingStats(false)
         return
       }
 
-      setStatsData(result)
+      setStatsData(apiResponse.result)
       setStatsStatus('Stats loaded')
       setIsLoadingStats(false)
     } catch (error) {
@@ -1261,6 +1220,7 @@ function App() {
       setIsLoadingStats(false)
     }
   }
+
   function handleReset() {
     const message = isUploading
       ? 'Uploads may still be running in the background. Reset only clears the screen. Continue?'
