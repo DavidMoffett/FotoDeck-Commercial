@@ -1091,15 +1091,15 @@ function App() {
     setActiveCollectionId(collection.id)
     setActiveEventId(event.id)
     setCollectionName(collection.name || 'FOTODECK')
-    setEventName(event.name || 'Event')
+    setEventName(event.name || 'Gallery')
     setPhotos([])
     setVisiblePhotoCount(24)
     setSelectedPhoto(null)
     setCartItems([])
     setBuyerEmail('')
     setCartStatus('Cart is empty')
-    setPriceStatus(`Selected ${event.name || 'Event'}`)
-    setSavedStatus(`Selected ${collection.name || 'Collection'} / ${event.name || 'Event'}`)
+    setPriceStatus(`Selected ${event.name || 'Gallery'}`)
+    setSavedStatus(`Selected ${collection.name || 'Collection'} / ${event.name || 'Gallery'}`)
     await handleLoadSavedPhotos(collection.id, event.id)
   }
 
@@ -1107,7 +1107,7 @@ function App() {
     setActiveCollectionId(collection.id)
     setActiveEventId(event.id)
     setCollectionName(collection.name || 'FOTODECK')
-    setEventName(event.name || 'Event')
+    setEventName(event.name || 'Gallery')
     setPhotos([])
     setVisiblePhotoCount(24)
     setSelectedPhoto(null)
@@ -1173,7 +1173,7 @@ function App() {
 
   async function handleDeleteEvent(collection, event) {
     const firstConfirm = window.confirm(
-      `Delete this event from FOTODECK?\n\nCollection: ${collection.name || 'Collection'}\nEvent: ${event.name || 'Event'}\nPhotos: ${event.photo_count || 0}\n\nThis deletes the selected gallery/group and its photos. It does not delete the collection.`
+      `Delete this event from FOTODECK?\n\nCollection: ${collection.name || 'Collection'}\nEvent: ${event.name || 'Gallery'}\nPhotos: ${event.photo_count || 0}\n\nThis deletes the selected gallery/group and its photos. It does not delete the collection.`
     )
 
     if (!firstConfirm) {
@@ -1181,7 +1181,7 @@ function App() {
     }
 
     const typedConfirm = window.prompt(
-      `Final confirmation for deleting event:\n\n${event.name || 'Event'}\n\nType DELETE EVENT to continue.`
+      `Final confirmation for deleting event:\n\n${event.name || 'Gallery'}\n\nType DELETE EVENT to continue.`
     )
 
     if (typedConfirm !== 'DELETE EVENT') {
@@ -1190,7 +1190,7 @@ function App() {
     }
 
     setDeletingEventId(event.id)
-    setDeleteStatus(`Deleting event ${event.name || 'Event'}...`)
+    setDeleteStatus(`Deleting event ${event.name || 'Gallery'}...`)
 
     try {
       const response = await fetch('/api/delete-event', {
@@ -1208,7 +1208,7 @@ function App() {
       const result = await response.json()
 
       if (!response.ok || !result.ok) {
-        setDeleteStatus(result.error || `Could not delete event ${event.name || 'Event'}`)
+        setDeleteStatus(result.error || `Could not delete event ${event.name || 'Gallery'}`)
         setDeletingEventId('')
         return
       }
@@ -1243,11 +1243,11 @@ function App() {
         setLoadStatus('Deleted event removed from current view')
       }
 
-      setDeleteStatus(`Deleted event ${event.name || 'Event'}`)
-      setSavedStatus(`Deleted ${collection.name || 'Collection'} / ${event.name || 'Event'}`)
+      setDeleteStatus(`Deleted event ${event.name || 'Gallery'}`)
+      setSavedStatus(`Deleted ${collection.name || 'Collection'} / ${event.name || 'Gallery'}`)
       setDeletingEventId('')
     } catch (error) {
-      setDeleteStatus(error.message || `Could not delete event ${event.name || 'Event'}`)
+      setDeleteStatus(error.message || `Could not delete event ${event.name || 'Gallery'}`)
       setDeletingEventId('')
     }
   }
@@ -2619,6 +2619,7 @@ function App() {
 }
 
 export default App
+
 
 
 
