@@ -1843,7 +1843,7 @@ function App() {
                 </label>
 
                 <label>
-                  Event
+                  Gallery
                   <input
                     type="text"
                     value={eventName}
