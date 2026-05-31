@@ -48,7 +48,7 @@ export async function onRequestPost(context) {
       },
       body: JSON.stringify({
         from: "FotoDeck Trial <downloads@fotodeck.app>",
-        to: ["david@moffett.co.nz"],
+        to: ["info@fotodeck.app"],
         reply_to: email,
         subject: "FotoDeck trial request",
         text: emailBody
