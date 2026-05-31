@@ -19,8 +19,8 @@
       </p>
 
       <div class="actions">
-        <a class="button" href="#">Start selling</a>
-        <a class="button secondary" href="#">See how it works</a>
+        <a class="button" href="#trial">Request a trial</a>
+        <a class="button secondary" href="#how">See how it works</a>
       </div>
 
       <div class="proof">
@@ -41,7 +41,7 @@
       </div>
     </section>
 
-    <section class="how">
+    <section class="how" id="how">
       <p class="section-label">How it works</p>
 
       <div class="steps">
@@ -77,6 +77,48 @@
           <p>Sports and action photographers</p>
           <p>Small studios selling simple digital downloads</p>
         </div>
+      </div>
+    </section>
+
+    <section class="trial" id="trial">
+      <p class="section-label">Request a trial</p>
+
+      <div class="trial-panel">
+        <div class="trial-copy">
+          <h2>Want to try FotoDeck?</h2>
+          <p>
+            Send a short trial request and we will come back to you with the next step.
+          </p>
+        </div>
+
+        <form class="trial-form" action="mailto:david@moffett.co.nz" method="post" enctype="text/plain">
+          <label>
+            Name
+            <input type="text" name="name" required>
+          </label>
+
+          <label>
+            Email
+            <input type="email" name="email" required>
+          </label>
+
+          <label>
+            Photography or business name
+            <input type="text" name="business">
+          </label>
+
+          <label>
+            What do you shoot?
+            <input type="text" name="shoots" placeholder="Events, schools, sport, studio, other">
+          </label>
+
+          <label>
+            Message
+            <textarea name="message" rows="4"></textarea>
+          </label>
+
+          <button type="submit">Send trial request</button>
+        </form>
       </div>
     </section>
   </main>
