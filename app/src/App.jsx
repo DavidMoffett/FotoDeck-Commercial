@@ -1676,7 +1676,7 @@ function App() {
                   Studio
                 </button>
                 <button type="button" onClick={handleOpenCustomerView}>
-                  Open customer view
+                  Open buyer view
                 </button>
                 <button type="button" onClick={handleOpenStats} disabled={isLoadingStats}>
                   {isLoadingStats ? 'Loading stats...' : 'Stats'}
@@ -2082,7 +2082,7 @@ function App() {
                   onClick={handleOpenCustomerView}
                   disabled={isUploading}
                 >
-                  Open customer view
+                  Open buyer view
                 </button>
               </div>
 
