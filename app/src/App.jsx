@@ -186,7 +186,7 @@ function App() {
         setSignupBusinessName(visitor.name || '')
         setSignupEmail(visitor.email || '')
         setSignupPhone(visitor.phone || '')
-        setSignupStatus('Welcome back. Opening Events...')
+        setSignupStatus('Welcome back. Opening Galleries...')
         setView('public-collections')
         window.history.replaceState({}, document.title, '/view')
         await handleLoadSavedCollectionsEvents()
@@ -401,7 +401,7 @@ function App() {
     }
 
     window.localStorage.setItem('fotodeck_visitor', JSON.stringify(signup))
-    setSignupStatus('Opening Events...')
+    setSignupStatus('Opening Galleries...')
     setView('public-collections')
     window.history.pushState({}, document.title, '/view')
     await handleLoadSavedCollectionsEvents()
@@ -1492,7 +1492,7 @@ function App() {
               textAlign: 'center',
             }}
           >
-            Choose your Event
+            Choose your Gallery
           </p>
         </div>
 
@@ -1530,7 +1530,7 @@ function App() {
                 textAlign: 'center',
               }}
             >
-              No photo events are available yet.
+              No photo galleries are available yet.
             </div>
           )}
 
@@ -1682,7 +1682,7 @@ function App() {
                   {isLoadingStats ? 'Loading stats...' : 'Stats'}
                 </button>
                 <button type="button" onClick={() => handleLoadSavedPhotos()}>
-                  Load current event
+                  Load current gallery
                 </button>
                 <button type="button" onClick={handleReset}>
                   Reset
@@ -1847,7 +1847,7 @@ function App() {
                   <input
                     type="text"
                     value={eventName}
-                    placeholder="Event"
+                    placeholder="Gallery"
                     onChange={(event) => {
                       setEventName(event.target.value)
                       setActiveEventId('')
@@ -1895,7 +1895,7 @@ function App() {
                 />
 
                 <button className="photo-loader-button" type="button" onClick={() => handleLoadSavedPhotos()} disabled={isUploading}>
-                  Load current event
+                  Load current gallery
                 </button>
 
                 {isUploading && (
@@ -1912,7 +1912,7 @@ function App() {
                   <p className="soft-label">
                     Saved
                   </p>
-                  <h1 style={smallHeadingStyle}>Collections / Events</h1>
+                  <h1 style={smallHeadingStyle}>Collections / Galleries</h1>
                 </div>
 
                 <button className="dark-action" type="button" onClick={handleLoadSavedCollectionsEvents} disabled={isUploading}>
@@ -2035,7 +2035,7 @@ function App() {
 
                         {collectionEvents.length === 0 && (
                           <div className="empty-photo-space">
-                            No events saved for this collection.
+                            No galleries saved for this collection.
                           </div>
                         )}
 
@@ -2060,7 +2060,7 @@ function App() {
                                     onClick={(clickEvent) => handleDeleteEventButtonClick(clickEvent, collection, event)}
                                     disabled={isUploading || deletingEventId === event.id || deletingCollectionId === collection.id}
                                   >
-                                    {deletingEventId === event.id ? 'Deleting...' : 'Delete Event'}
+                                    {deletingEventId === event.id ? 'Deleting...' : 'Delete Gallery'}
                                   </button>
                                 </div>
                               </article>
@@ -2281,7 +2281,7 @@ function App() {
                       padding: '10px 16px',
                     }}
                   >
-                    Back to Events
+                    Back to Galleries
                   </button>
                 </div>
               </div>
@@ -2619,3 +2619,5 @@ function App() {
 }
 
 export default App
+
+
