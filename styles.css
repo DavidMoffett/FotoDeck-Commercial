@@ -114,6 +114,7 @@ h1 {
 
 .how,
 .fit,
+.pricing,
 .trial {
   width: 100%;
   max-width: 920px;
@@ -123,6 +124,7 @@ h1 {
 }
 
 .fit,
+.pricing,
 .trial {
   margin-top: 54px;
 }
@@ -205,6 +207,29 @@ h1 {
   background: rgba(255, 255, 255, 0.09);
   font-size: 17px;
   line-height: 1.3;
+}
+
+.pricing-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 24px 28px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid #e1e1dc;
+}
+
+.pricing-pill strong {
+  font-size: 20px;
+  line-height: 1.25;
+}
+
+.pricing-pill span {
+  font-size: 16px;
+  line-height: 1.35;
+  color: #555555;
+  text-align: right;
 }
 
 .trial-panel {
@@ -312,11 +337,13 @@ h1 {
 
   .how,
   .fit,
+  .pricing,
   .trial {
     padding-top: 40px;
   }
 
   .fit,
+  .pricing,
   .trial {
     margin-top: 40px;
   }
@@ -329,6 +356,16 @@ h1 {
   .fit-panel,
   .trial-panel {
     padding: 26px;
+  }
+
+  .pricing-pill {
+    align-items: flex-start;
+    flex-direction: column;
+    border-radius: 30px;
+  }
+
+  .pricing-pill span {
+    text-align: left;
   }
 }
 
