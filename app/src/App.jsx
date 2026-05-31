@@ -1,58 +1,17 @@
 ﻿import { useEffect, useRef, useState } from 'react'
 import './App.css'
 
-function makeSafeId(value, fallback) {
-  const text = value ? String(value).trim().toLowerCase() : ''
+import {
+  makeDisplayPhotoUrl,
+  makeSafeId,
+  getUploadedTime,
+  sortPhotosFirstFirst,
+  priceFromCents,
+} from './fotodeckUtils'
 
-  const safe = text
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-
-  return safe || fallback
-}
-
-function makeDisplayPhotoUrl(displayKey) {
-  if (!displayKey) {
-    return ''
-  }
-
-  return `/api/display-image?key=${encodeURIComponent(displayKey)}`
-}
-
-function getUploadedTime(photo) {
-  return (
-    photo.uploaded_at ||
-    photo.created_at ||
-    photo.inserted_at ||
-    photo.saved_at ||
-    photo.createdAt ||
-    photo.uploadedAt ||
-    ''
-  )
-}
-
-function getPhotoSortName(photo) {
-  return photo?.name || photo?.file_name || photo?.displayKey || photo?.display_key || photo?.id || ''
-}
-
-function sortPhotosFirstFirst(photosToSort) {
-  return [...photosToSort].sort((firstPhoto, secondPhoto) =>
-    getPhotoSortName(firstPhoto).localeCompare(getPhotoSortName(secondPhoto), undefined, {
-      numeric: true,
-      sensitivity: 'base',
-    })
-  )
-}
-
-function priceFromCents(priceCents) {
-  const cents = Number(priceCents || 0)
-
-  if (!Number.isFinite(cents) || cents <= 0) {
-    return ''
-  }
-
-  return (cents / 100).toFixed(2).replace(/\.00$/, '')
-}
+import {
+  makeDisplayImageFile,
+} from './fotodeckImageUtils'
 
 function getInitialView() {
   const pathname = window.location.pathname
@@ -710,63 +669,6 @@ function App() {
     })
     uploadControllersRef.current = []
     setUploadStatus('Cancelling upload...')
-  }
-
-  function makeDisplayFileName(fileName) {
-    const cleanName = String(fileName || 'fotodeck-display.jpg')
-      .trim()
-      .replace(/\.[^.]+$/, '')
-      .replace(/[^a-zA-Z0-9._-]/g, '-')
-      .replace(/-+/g, '-')
-      .toLowerCase()
-
-    return `${cleanName || 'fotodeck-display'}-display.jpg`
-  }
-
-  async function makeDisplayImageFile(file) {
-    const maxEdge = 1800
-    const jpegQuality = 0.78
-
-    if (!file || !file.type || !file.type.startsWith('image/')) {
-      return file
-    }
-
-    try {
-      const imageBitmap = await createImageBitmap(file)
-      const longestEdge = Math.max(imageBitmap.width, imageBitmap.height)
-      const scale = longestEdge > maxEdge ? maxEdge / longestEdge : 1
-      const nextWidth = Math.max(1, Math.round(imageBitmap.width * scale))
-      const nextHeight = Math.max(1, Math.round(imageBitmap.height * scale))
-      const canvas = document.createElement('canvas')
-
-      canvas.width = nextWidth
-      canvas.height = nextHeight
-
-      const context = canvas.getContext('2d')
-
-      if (!context) {
-        imageBitmap.close()
-        return file
-      }
-
-      context.drawImage(imageBitmap, 0, 0, nextWidth, nextHeight)
-      imageBitmap.close()
-
-      const blob = await new Promise((resolve) => {
-        canvas.toBlob(resolve, 'image/jpeg', jpegQuality)
-      })
-
-      if (!blob) {
-        return file
-      }
-
-      return new File([blob], makeDisplayFileName(file.name), {
-        type: 'image/jpeg',
-        lastModified: file.lastModified || Date.now(),
-      })
-    } catch {
-      return file
-    }
   }
 
   async function handlePhotoSelection(event) {
@@ -2371,247 +2273,150 @@ function App() {
                 </span>
                 <br />
                 <span style={{ color: '#991b1b' }}>
-                  Check your inbox after payment. If it is not there, check junk or spam.
+                  If the email does not arrive quickly, check spam or junk.
                 </span>
-                <br />
-                <br />
-                <strong style={{ color: '#991b1b' }}>Want more than one photo?</strong>
-                <br />
-                <span style={{ color: '#991b1b' }}>Keep browsing and tap Add on any photo you want. Pay once when you are ready.</span>
               </div>
 
-              <div className="studio-fields">
-                <label>
-                  Email for delivery
-                  <input
-                    type="email"
-                    value={buyerEmail}
-                    placeholder="buyer@example.com"
-                    onChange={(event) => setBuyerEmail(event.target.value)}
-                    disabled={isCheckingOut}
-                  />
-                </label>
-              </div>
-
-              <div className="empty-photo-space" style={{ marginTop: '12px' }}>
-                <strong>{cartStatus}</strong>
-
-                {cartItems.length > 0 && (
-                  <div style={{ width: '100%', display: 'grid', gap: '8px', marginTop: '12px' }}>
-                    {cartItems.map((item) => (
-                      <div
-                        key={item.id}
-                        className="buy-row"
-                        style={{
-                          width: '100%',
-                          borderRadius: '999px',
-                        }}
-                      >
-                        <span>{item.name}</span>
-                        <button type="button" onClick={() => handleRemoveFromCart(item)} disabled={isCheckingOut}>
-                          Remove
-                        </button>
-                      </div>
-                    ))}
+              <div className="checkout-list">
+                {cartItems.length === 0 && (
+                  <div className="empty-photo-space">
+                    No photos selected yet.
                   </div>
                 )}
 
-                {cartItems.length > 0 && (
-                  <>
-                    <br />
-                    <button type="button" onClick={handleClearCart} disabled={isCheckingOut}>
-                      Clear cart
+                {cartItems.map((photo) => (
+                  <div className="checkout-row" key={photo.id}>
+                    <span>{photo.name}</span>
+                    <strong>NZ${getPhotoPrice(photo).toFixed(2)}</strong>
+                    <button type="button" onClick={() => handleRemoveFromCart(photo)}>
+                      Remove
                     </button>
-                  </>
-                )}
+                  </div>
+                ))}
+              </div>
+
+              <label>
+                Buyer email for download links
+                <input
+                  type="email"
+                  value={buyerEmail}
+                  placeholder="buyer@example.com"
+                  onChange={(event) => setBuyerEmail(event.target.value)}
+                />
+              </label>
+
+              <div className="buy-row" style={{ marginTop: '12px' }}>
+                <span>{cartStatus}</span>
+                <button type="button" onClick={handleClearCart} disabled={cartItems.length === 0}>
+                  Clear cart
+                </button>
               </div>
             </section>
 
-            {cartItems.length > 0 && (
-              <div
-                style={{
-                  position: 'fixed',
-                  left: '50%',
-                  bottom: '14px',
-                  transform: 'translateX(-50%)',
-                  width: 'calc(100% - 28px)',
-                  maxWidth: '520px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: '12px',
-                  padding: '10px 12px',
-                  borderRadius: '999px',
-                  background: 'rgba(255, 255, 255, 0.94)',
-                  boxShadow: '0 18px 44px rgba(17, 24, 39, 0.22)',
-                  zIndex: 30,
-                }}
-              >
-                <strong
-                  style={{
-                    fontSize: '0.9rem',
-                    color: '#111827',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {cartItems.length} selected / NZ${cartTotal.toFixed(2)}
-                </strong>
-
-                <button className="dark-action" type="button" onClick={handleScrollToCheckout} disabled={isCheckingOut}>
-                  Checkout
+            {selectedPhoto && (
+              <div className="lightbox" role="dialog" aria-modal="true">
+                <button className="lightbox-close" type="button" onClick={() => setSelectedPhoto(null)}>
+                  Close
                 </button>
+
+                <div className="lightbox-image-wrap">
+                  <img src={selectedPhoto.previewUrl} alt={selectedPhoto.name} />
+                  {renderWatermark(watermarkText)}
+                </div>
+
+                <div className="lightbox-actions">
+                  <button type="button" onClick={handlePreviousSelectedPhoto} disabled={getSelectedPhotoIndex() <= 0}>
+                    Previous
+                  </button>
+                  <button type="button" onClick={handleNextSelectedPhoto} disabled={getSelectedPhotoIndex() < 0 || getSelectedPhotoIndex() >= photos.length - 1}>
+                    Next
+                  </button>
+
+                  <button type="button" onClick={() => handleLightboxCartAction(selectedPhoto)}>
+                    {isPhotoInCart(selectedPhoto) ? 'Back to photos' : 'Add to cart'}
+                  </button>
+                </div>
               </div>
             )}
           </section>
         )}
 
         {isStatsOpen && (
-          <section
-            aria-label="Admin stats"
-            style={{
-              position: 'fixed',
-              top: 0,
-              right: 0,
-              width: 'min(420px, 92vw)',
-              height: '100vh',
-              zIndex: 40,
-              background: '#f8fafc',
-              boxShadow: '-18px 0 45px rgba(17, 24, 39, 0.22)',
-              padding: '22px',
-              overflowY: 'auto',
-              boxSizing: 'border-box',
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: '12px',
-                marginBottom: '18px',
-              }}
-            >
-              <div>
-                <p className="soft-label">Admin</p>
-                <h1 style={smallHeadingStyle}>Stats</h1>
-              </div>
-
-              <button type="button" onClick={() => setIsStatsOpen(false)}>
-                Close
-              </button>
-            </div>
-
-            <div className="empty-photo-space" style={{ marginBottom: '14px' }}>
-              <strong>{statsStatus}</strong>
-            </div>
-
-            {statsData && (
-              <div style={{ display: 'grid', gap: '14px' }}>
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 1fr',
-                    gap: '10px',
-                  }}
-                >
-                  <div className="empty-photo-space">
-                    <span>Total sales</span>
-                    <br />
-                    <strong>NZ${statsData.totals?.revenue || '0.00'}</strong>
-                  </div>
-
-                  <div className="empty-photo-space">
-                    <span>Orders</span>
-                    <br />
-                    <strong>{statsData.totals?.order_count || 0}</strong>
-                  </div>
-
-                  <div className="empty-photo-space">
-                    <span>Images sold</span>
-                    <br />
-                    <strong>{statsData.totals?.image_count || 0}</strong>
-                  </div>
-
-                  <div className="empty-photo-space">
-                    <span>Image revenue</span>
-                    <br />
-                    <strong>NZ${statsData.totals?.image_revenue || '0.00'}</strong>
-                  </div>
+          <aside className="stats-overlay">
+            <section className="stats-drawer">
+              <div className="preview-heading">
+                <div>
+                  <p className="soft-label">
+                    Stats
+                  </p>
+                  <h1 style={smallHeadingStyle}>Sales snapshot</h1>
                 </div>
 
-                <section className="studio-preview">
-                  <div className="preview-heading" style={{ marginBottom: '10px' }}>
-                    <div>
-                      <p className="soft-label">Recent</p>
-                      <h1 style={smallHeadingStyle}>Orders</h1>
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'grid', gap: '8px' }}>
-                    {(statsData.recent_orders || []).length === 0 && (
-                      <div className="empty-photo-space">
-                        No paid orders yet.
-                      </div>
-                    )}
-
-                    {(statsData.recent_orders || []).slice(0, 10).map((order) => (
-                      <div key={order.id} className="empty-photo-space" style={{ textAlign: 'left' }}>
-                        <strong>{order.currency || 'NZD'} {order.amount || '0.00'}</strong>
-                        <br />
-                        <span>{order.buyer_email}</span>
-                        <br />
-                        <span>{order.collection_id} / {order.event_id}</span>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              </div>
-            )}
-          </section>
-        )}
-
-        {selectedPhoto && (
-          <section className="lightbox" aria-label="Selected photo">
-            <div className="lightbox-card">
-              <div className="lightbox-top">
-                <span>{selectedPhoto.name}</span>
-
-                <button type="button" onClick={() => setSelectedPhoto(null)}>
+                <button type="button" onClick={() => setIsStatsOpen(false)}>
                   Close
                 </button>
               </div>
 
-              <div className="lightbox-image">
-                <div className="lightbox-photo-frame">
-                  <img
-                    src={selectedPhoto.previewUrl}
-                    alt={selectedPhoto.name}
-                    loading="eager"
-                    decoding="async"
-                  />
-                  {renderWatermark(watermarkText)}
-                </div>
+              <div className="empty-photo-space">
+                <strong>{statsStatus}</strong>
               </div>
 
-              <div className="lightbox-bottom">
-                <button type="button" onClick={handlePreviousSelectedPhoto} disabled={getSelectedPhotoIndex() <= 0}>
-                  Previous
-                </button>
+              {statsData && (
+                <>
+                  <div className="stats-grid">
+                    <div className="stats-card">
+                      <span>Total revenue</span>
+                      <strong>NZ${((statsData.totals?.revenue_cents || 0) / 100).toFixed(2)}</strong>
+                    </div>
 
-                <p>
-                  NZ${getPhotoPrice(selectedPhoto).toFixed(2)}
-                </p>
+                    <div className="stats-card">
+                      <span>Orders</span>
+                      <strong>{statsData.totals?.order_count || 0}</strong>
+                    </div>
 
-                <button type="button" onClick={handleNextSelectedPhoto} disabled={getSelectedPhotoIndex() < 0 || getSelectedPhotoIndex() >= photos.length - 1}>
-                  Next
-                </button>
+                    <div className="stats-card">
+                      <span>Images sold</span>
+                      <strong>{statsData.totals?.image_count || 0}</strong>
+                    </div>
+                  </div>
 
-                <button type="button" onClick={() => handleLightboxCartAction(selectedPhoto)}>
-                  {isPhotoInCart(selectedPhoto) ? 'Back to photos' : 'Add to cart'}
-                </button>
-              </div>
-            </div>
-          </section>
+                  <div className="stats-section">
+                    <h2>By collection</h2>
+
+                    {(statsData.byCollection || []).length === 0 && (
+                      <p>No collection sales yet.</p>
+                    )}
+
+                    {(statsData.byCollection || []).map((item) => (
+                      <div className="stats-row" key={item.collection_id}>
+                        <span>{item.collection_id || 'Collection'}</span>
+                        <strong>
+                          NZ${((item.revenue_cents || 0) / 100).toFixed(2)}
+                        </strong>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="stats-section">
+                    <h2>Recent orders</h2>
+
+                    {(statsData.recentOrders || []).length === 0 && (
+                      <p>No paid orders yet.</p>
+                    )}
+
+                    {(statsData.recentOrders || []).map((order) => (
+                      <div className="stats-row" key={order.id}>
+                        <span>{order.buyer_email || 'Buyer'} · {order.collection_id} / {order.event_id}</span>
+                        <strong>
+                          NZ${((order.amount_total || 0) / 100).toFixed(2)}
+                        </strong>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </section>
+          </aside>
         )}
       </section>
     </main>
@@ -2619,8 +2424,3 @@ function App() {
 }
 
 export default App
-
-
-
-
-
