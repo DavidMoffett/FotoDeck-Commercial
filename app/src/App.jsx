@@ -83,7 +83,7 @@ function App() {
 
   const [view, setView] = useState(getInitialView)
   const [collectionName, setCollectionName] = useState('FOTODECK')
-  const [eventName, setEventName] = useState('Event')
+  const [eventName, setEventName] = useState('Gallery')
   const [activeCollectionId, setActiveCollectionId] = useState('')
   const [activeEventId, setActiveEventId] = useState('')
   const [singlePhotoPrice, setSinglePhotoPrice] = useState('7')
@@ -512,7 +512,7 @@ function App() {
     setActiveCollectionId(collection.id)
     setActiveEventId(firstEvent?.id || '')
     setCollectionName(collection.name || 'FOTODECK')
-    setEventName(firstEvent?.name || 'Event')
+    setEventName(firstEvent?.name || 'Gallery')
     setPhotos([])
     setVisiblePhotoCount(24)
     setSelectedPhoto(null)
@@ -693,7 +693,7 @@ function App() {
 
       setCartItems([])
       setCartStatus('Cart cleared after price change')
-      setPriceStatus(`Saved ${eventName || 'Event'} price at NZ$${price.toFixed(2)}`)
+      setPriceStatus(`Saved ${eventName || 'Gallery'} price at NZ$${price.toFixed(2)}`)
       setIsUpdatingPrice(false)
 
       await handleLoadSavedPhotos(collectionId, eventId)
@@ -817,7 +817,7 @@ function App() {
         formData.append('collectionId', collectionId)
         formData.append('collectionName', collectionName || 'FOTODECK')
         formData.append('eventId', eventId)
-        formData.append('eventName', eventName || 'Event')
+        formData.append('eventName', eventName || 'Gallery')
         formData.append('watermarkText', watermarkText || 'FOTODECK')
         formData.append('price', singlePhotoPrice || '0')
 
@@ -966,7 +966,7 @@ function App() {
       setPhotos(savedPhotos)
       setVisiblePhotoCount(24)
       setCollectionName(firstPhoto?.collectionName || 'Collection')
-      setEventName(firstPhoto?.eventName || 'Event')
+      setEventName(firstPhoto?.eventName || 'Gallery')
       setActiveCollectionId(collectionId)
       setActiveEventId(eventId)
 
@@ -1233,7 +1233,7 @@ function App() {
 
       if (activeCollectionId === collection.id && activeEventId === event.id) {
         setActiveEventId('')
-        setEventName('Event')
+        setEventName('Gallery')
         setPhotos([])
         setVisiblePhotoCount(24)
         setSelectedPhoto(null)
@@ -1300,7 +1300,7 @@ function App() {
         setActiveCollectionId('')
         setActiveEventId('')
         setCollectionName('FOTODECK')
-        setEventName('Event')
+        setEventName('Gallery')
         setPhotos([])
         setVisiblePhotoCount(24)
         setSelectedPhoto(null)
@@ -1372,7 +1372,7 @@ function App() {
 
     setView('studio')
     setCollectionName('FOTODECK')
-    setEventName('Event')
+    setEventName('Gallery')
     setActiveCollectionId('')
     setActiveEventId('')
     setSinglePhotoPrice('7')
@@ -2179,7 +2179,7 @@ function App() {
             <div className="collection-heading">
               <div>
                 <p className="soft-label">
-                  {collectionName || 'Collection'} / {eventName || 'Event'}
+                  {collectionName || 'Collection'} / {eventName || 'Gallery'}
                 </p>
               </div>
 
@@ -2619,5 +2619,6 @@ function App() {
 }
 
 export default App
+
 
 
