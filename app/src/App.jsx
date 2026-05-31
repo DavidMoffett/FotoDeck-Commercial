@@ -522,11 +522,11 @@ function App() {
     setPriceStatus(`Editing ${collection.name || 'Collection'} collection settings`)
 
     if (!firstEvent) {
-      setLoadStatus('Selected collection has no saved events yet')
+      setLoadStatus('Selected collection has no saved galleries yet')
       return
     }
 
-    setLoadStatus(`Loading saved photos for ${firstEvent.name || 'selected event'}...`)
+    setLoadStatus(`Loading saved photos for ${firstEvent.name || 'selected gallery'}...`)
 
     try {
       const response = await fetch(
@@ -649,7 +649,7 @@ function App() {
     const price = Number(singlePhotoPrice)
 
     if (!activeCollectionId || !activeEventId) {
-      setPriceStatus('Select a saved event before editing price')
+      setPriceStatus('Select a saved gallery before editing price')
       return
     }
 
@@ -935,7 +935,7 @@ function App() {
       setUploadStatus(`Uploaded ${sortedUploadedPhotos.length} photo${sortedUploadedPhotos.length === 1 ? '' : 's'}`)
     }
 
-    setLoadStatus(`${sortedUploadedPhotos.length} photo${sortedUploadedPhotos.length === 1 ? '' : 's'} shown for this event`)
+    setLoadStatus(`${sortedUploadedPhotos.length} photo${sortedUploadedPhotos.length === 1 ? '' : 's'} shown for this gallery`)
     uploadControllersRef.current = []
     uploadCancelRef.current = false
     event.target.value = ''
@@ -987,7 +987,7 @@ function App() {
     const collectionId = collectionIdOverride || getCurrentCollectionId()
     const eventId = eventIdOverride || getCurrentEventId()
 
-    setLoadStatus(`Loading saved photos for ${eventName || 'selected event'}...`)
+    setLoadStatus(`Loading saved photos for ${eventName || 'selected gallery'}...`)
 
     try {
       const response = await fetch(
@@ -1000,7 +1000,7 @@ function App() {
         setVisiblePhotoCount(24)
         setCartItems([])
         setCartStatus('Cart is empty')
-        setLoadStatus(result.error || 'No saved photos found for this event')
+        setLoadStatus(result.error || 'No saved photos found for this gallery')
         return
       }
 
@@ -1016,7 +1016,7 @@ function App() {
 
       setCartItems([])
       setCartStatus('Cart is empty')
-      setLoadStatus(`Loaded ${savedPhotos.length} saved photo${savedPhotos.length === 1 ? '' : 's'} for this event`)
+      setLoadStatus(`Loaded ${savedPhotos.length} saved photo${savedPhotos.length === 1 ? '' : 's'} for this gallery`)
     } catch (error) {
       setLoadStatus(error.message || 'Saved photos could not be loaded')
     }
@@ -1173,7 +1173,7 @@ function App() {
 
   async function handleDeleteEvent(collection, event) {
     const firstConfirm = window.confirm(
-      `Delete this event from FOTODECK?\n\nCollection: ${collection.name || 'Collection'}\nEvent: ${event.name || 'Event'}\nPhotos: ${event.photo_count || 0}\n\nThis deletes the selected event/group and its photos. It does not delete the collection.`
+      `Delete this event from FOTODECK?\n\nCollection: ${collection.name || 'Collection'}\nEvent: ${event.name || 'Event'}\nPhotos: ${event.photo_count || 0}\n\nThis deletes the selected gallery/group and its photos. It does not delete the collection.`
     )
 
     if (!firstConfirm) {
@@ -1254,7 +1254,7 @@ function App() {
 
   async function handleDeleteCollection(collection) {
     const firstConfirm = window.confirm(
-      `Delete this entire collection from FOTODECK?\n\nCollection: ${collection.name || 'Collection'}\nPhotos: ${collection.photo_count || 0}\n\nThis deletes the collection, all events inside it, all photos inside those events, and the saved display files.`
+      `Delete this entire collection from FOTODECK?\n\nCollection: ${collection.name || 'Collection'}\nPhotos: ${collection.photo_count || 0}\n\nThis deletes the collection, all galleries inside it, all photos inside those events, and the saved display files.`
     )
 
     if (!firstConfirm) {
@@ -2619,6 +2619,7 @@ function App() {
 }
 
 export default App
+
 
 
 
