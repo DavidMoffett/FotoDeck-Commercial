@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FOTODECK Admin Flow Mock</title>
+  <title>FOTODECK Admin Working Test Model</title>
   <style>
     :root {
       --page: #eeeeec;
@@ -133,20 +133,162 @@
 
     .layout {
       display: grid;
-      grid-template-columns: 330px minmax(0, 1fr) 310px;
+      grid-template-columns: minmax(0, 1fr);
       gap: 18px;
       align-items: start;
     }
 
-    .panel {
+    .main {
+      display: grid;
+      gap: 18px;
+    }
+
+    .hero-card {
+      min-height: 250px;
+      display: grid;
+      align-content: end;
+      border-radius: var(--radius-lg);
+      padding: 26px;
+      color: #ffffff;
+      box-shadow: var(--shadow);
+      background:
+        linear-gradient(180deg, rgba(17, 17, 17, 0.08), rgba(17, 17, 17, 0.82)),
+        var(--hero) center/cover;
+      overflow: hidden;
+    }
+
+    .hero-card.painted {
+      background:
+        linear-gradient(180deg, rgba(17, 17, 17, 0.08), rgba(17, 17, 17, 0.82)),
+        var(--hero) center/cover;
+    }
+
+    .hero-card.blank,
+    .buyer-head.blank {
+      background: linear-gradient(135deg, #262626, #777777);
+    }
+
+    .hero-card p {
+      margin: 0 0 7px;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-weight: 900;
+      color: rgba(255, 255, 255, 0.72);
+    }
+
+    .hero-card h1 {
+      max-width: 720px;
+      margin: 0;
+      font-size: clamp(2.2rem, 4vw, 4.4rem);
+      line-height: 0.9;
+      letter-spacing: -0.09em;
+    }
+
+    .workspace-panel {
       border-radius: var(--radius-lg);
       background: var(--panel);
       box-shadow: var(--shadow);
-      padding: 20px;
+      padding: 18px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .workspace-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .workspace-head span {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .workspace-head h2 {
+      margin: 4px 0 0;
+      font-size: 1.1rem;
+      line-height: 1;
+      letter-spacing: -0.05em;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 7px 10px;
+      background: #e8f5ee;
+      color: var(--good);
+      font-size: 0.78rem;
+      font-weight: 900;
+    }
+
+    .work-setup-grid {
+      display: grid;
+      grid-template-columns: minmax(270px, 0.72fr) minmax(420px, 1.28fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .setup-card,
+    .upload-card,
+    .images-panel,
+    .danger-zone {
+      border-radius: var(--radius-md);
+      background: #ffffff;
+      padding: 18px;
+    }
+
+    .setup-card {
+      display: grid;
+      align-content: start;
+      gap: 16px;
+    }
+
+    .upload-card {
+      display: grid;
+      gap: 14px;
+      min-height: 100%;
+    }
+
+    .upload-drop {
+      min-height: 330px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      border-radius: var(--radius-md);
+      background:
+        linear-gradient(135deg, rgba(200, 162, 74, 0.20), rgba(255, 255, 255, 0.4)),
+        #f2f2ef;
+      color: var(--muted);
+      padding: 28px;
+      cursor: pointer;
+    }
+
+    .upload-drop strong {
+      display: block;
+      color: var(--ink);
+      font-size: clamp(1.45rem, 2vw, 2rem);
+      line-height: 1;
+      letter-spacing: -0.06em;
+      margin-bottom: 8px;
+    }
+
+    .upload-drop span {
+      display: block;
+      max-width: 460px;
+      margin: 0 auto;
+      font-size: 0.94rem;
+      line-height: 1.4;
+      font-weight: 800;
     }
 
     .panel-title {
-      margin: 0 0 16px;
+      margin: 0;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -166,17 +308,6 @@
       font-size: 1.05rem;
       line-height: 1;
       letter-spacing: -0.05em;
-    }
-
-    .status-pill {
-      display: inline-flex;
-      align-items: center;
-      border-radius: 999px;
-      padding: 7px 10px;
-      background: #e8f5ee;
-      color: var(--good);
-      font-size: 0.78rem;
-      font-weight: 900;
     }
 
     .form-stack {
@@ -203,38 +334,12 @@
       box-shadow: inset 0 0 0 1px var(--line);
     }
 
+    .setup-card input {
+      background: #f8f8f6;
+    }
+
     input:focus {
       box-shadow: inset 0 0 0 2px rgba(200, 162, 74, 0.7);
-    }
-
-    .upload-card {
-      margin-top: 16px;
-      padding: 18px;
-      border-radius: var(--radius-md);
-      background: #ffffff;
-      display: grid;
-      gap: 12px;
-    }
-
-    .upload-drop {
-      min-height: 130px;
-      display: grid;
-      place-items: center;
-      text-align: center;
-      border-radius: var(--radius-md);
-      background:
-        linear-gradient(135deg, rgba(200, 162, 74, 0.16), rgba(255, 255, 255, 0.4)),
-        #f2f2ef;
-      color: var(--muted);
-      padding: 18px;
-    }
-
-    .upload-drop strong {
-      display: block;
-      color: var(--ink);
-      font-size: 1.05rem;
-      letter-spacing: -0.04em;
-      margin-bottom: 4px;
     }
 
     .upload-meta {
@@ -262,42 +367,6 @@
       font-weight: 800;
     }
 
-    .main {
-      display: grid;
-      gap: 18px;
-    }
-
-    .hero-card {
-      min-height: 230px;
-      display: grid;
-      align-content: end;
-      border-radius: var(--radius-lg);
-      padding: 26px;
-      color: #ffffff;
-      box-shadow: var(--shadow);
-      background:
-        linear-gradient(180deg, rgba(17, 17, 17, 0.08), rgba(17, 17, 17, 0.82)),
-        var(--hero) center/cover;
-      overflow: hidden;
-    }
-
-    .hero-card p {
-      margin: 0 0 7px;
-      font-size: 0.82rem;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      font-weight: 900;
-      color: rgba(255, 255, 255, 0.72);
-    }
-
-    .hero-card h1 {
-      max-width: 640px;
-      margin: 0;
-      font-size: clamp(2.2rem, 4vw, 4.4rem);
-      line-height: 0.9;
-      letter-spacing: -0.09em;
-    }
-
     .gallery-strip {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -305,7 +374,7 @@
     }
 
     .gallery-tile {
-      min-height: 106px;
+      min-height: 112px;
       border: 0;
       border-radius: var(--radius-md);
       padding: 14px;
@@ -319,6 +388,10 @@
         linear-gradient(180deg, rgba(17, 17, 17, 0.02), rgba(17, 17, 17, 0.72)),
         var(--image) center/cover;
       opacity: 0.78;
+    }
+
+    .gallery-tile.blank {
+      background: linear-gradient(135deg, #3a3a3a, #8a8a8a);
     }
 
     .gallery-tile.active {
@@ -340,10 +413,8 @@
     }
 
     .images-panel {
-      border-radius: var(--radius-lg);
-      background: var(--panel);
-      box-shadow: var(--shadow);
-      padding: 18px;
+      display: grid;
+      gap: 14px;
     }
 
     .images-head {
@@ -351,7 +422,6 @@
       align-items: center;
       justify-content: space-between;
       gap: 14px;
-      margin-bottom: 14px;
     }
 
     .images-head h2 {
@@ -387,6 +457,33 @@
       outline: 4px solid var(--gold);
     }
 
+    .image-card.cover::before,
+    .image-card.hero::before {
+      position: absolute;
+      top: 9px;
+      right: 9px;
+      z-index: 2;
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: var(--gold);
+      color: #15120a;
+      font-size: 0.62rem;
+      font-weight: 950;
+      letter-spacing: 0.04em;
+    }
+
+    .image-card.cover::before {
+      content: "COVER";
+    }
+
+    .image-card.hero::before {
+      content: "HERO";
+    }
+
+    .image-card.cover.hero::before {
+      content: "COVER + HERO";
+    }
+
     .image-card img {
       width: 100%;
       height: 100%;
@@ -408,76 +505,32 @@
       letter-spacing: 0.04em;
     }
 
-    .side-stack {
+    .empty-grid {
+      min-height: 180px;
+      border-radius: var(--radius-md);
       display: grid;
-      gap: 18px;
-    }
-
-    .money-card {
-      border-radius: var(--radius-lg);
-      background: var(--dark);
-      color: #ffffff;
-      padding: 20px;
-      box-shadow: var(--shadow);
-    }
-
-    .money-card span {
-      display: block;
-      color: rgba(255, 255, 255, 0.58);
-      font-size: 0.82rem;
-      font-weight: 850;
-      margin-bottom: 6px;
-    }
-
-    .money-card strong {
-      display: block;
-      font-size: 2.5rem;
-      line-height: 0.95;
-      letter-spacing: -0.08em;
-    }
-
-    .money-card p {
-      margin: 12px 0 0;
-      color: rgba(255, 255, 255, 0.68);
-      font-size: 0.88rem;
-      line-height: 1.35;
-    }
-
-    .order-list {
-      display: grid;
-      gap: 10px;
-    }
-
-    .order-row {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 12px;
-      align-items: center;
-      padding: 13px;
-      border-radius: var(--radius-sm);
-      background: #ffffff;
-    }
-
-    .order-row strong {
-      font-size: 0.86rem;
-    }
-
-    .order-row span {
-      display: block;
-      margin-top: 2px;
+      place-items: center;
+      text-align: center;
+      background: #f3f3f0;
       color: var(--muted);
-      font-size: 0.76rem;
-      font-weight: 800;
+      padding: 22px;
+      font-weight: 850;
     }
 
-    .order-row em {
-      font-style: normal;
-      font-size: 0.82rem;
-      font-weight: 950;
+    .image-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
     }
 
     .danger-zone {
       display: grid;
+      gap: 14px;
+    }
+
+    .work-delete-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 10px;
     }
 
@@ -516,6 +569,70 @@
       padding: 20px;
     }
 
+    .money-card {
+      border-radius: var(--radius-lg);
+      background: var(--dark);
+      color: #ffffff;
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .money-card span {
+      display: block;
+      color: rgba(255, 255, 255, 0.58);
+      font-size: 0.82rem;
+      font-weight: 850;
+      margin-bottom: 6px;
+    }
+
+    .money-card strong {
+      display: block;
+      font-size: 2.5rem;
+      line-height: 0.95;
+      letter-spacing: -0.08em;
+    }
+
+    .money-card p {
+      margin: 12px 0 0;
+      color: rgba(255, 255, 255, 0.68);
+      font-size: 0.88rem;
+      line-height: 1.35;
+    }
+
+    .order-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .order-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 13px;
+      border-radius: var(--radius-sm);
+      background: #ffffff;
+    }
+
+    .order-row strong {
+      font-size: 0.86rem;
+    }
+
+    .order-row span {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 800;
+    }
+
+    .order-row em {
+      font-style: normal;
+      font-size: 0.82rem;
+      font-weight: 950;
+    }
+
     .buyer {
       display: none;
       min-height: calc(100vh - 44px);
@@ -547,6 +664,15 @@
       margin-bottom: 18px;
     }
 
+    .buyer-head p {
+      margin: 0 0 7px;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-weight: 900;
+      color: rgba(255, 255, 255, 0.72);
+    }
+
     .buyer-head h1 {
       margin: 0;
       font-size: 3rem;
@@ -559,6 +685,7 @@
       padding: 22px;
       display: grid;
       gap: 14px;
+      align-content: start;
     }
 
     .cart-line {
@@ -586,8 +713,12 @@
       display: none;
     }
 
+    .file-input {
+      display: none;
+    }
+
     @media (max-width: 1100px) {
-      .layout {
+      .work-setup-grid {
         grid-template-columns: 1fr;
       }
 
@@ -600,6 +731,13 @@
       }
 
       .buyer.open {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .work-delete-row,
+      .upload-meta {
         grid-template-columns: 1fr;
       }
     }
@@ -628,6 +766,10 @@
       .buyer-head h1 {
         font-size: 2.7rem;
       }
+
+      .upload-drop {
+        min-height: 230px;
+      }
     }
   </style>
 </head>
@@ -639,175 +781,135 @@
           <div class="brand-mark">F</div>
           <div>
             <strong>FOTODECK Admin</strong>
-            <span id="statusText">Commercial workspace flow mock</span>
+            <span id="statusText">Session-only working test model</span>
           </div>
         </div>
 
         <div class="top-actions">
           <button class="button" onclick="toggleSimple()">Reduce clutter</button>
+          <button class="button" onclick="createGallery()">New gallery</button>
           <button class="button" onclick="openStats()">Stats</button>
           <button class="button" onclick="openBuyer()">Open buyer view</button>
           <button class="button gold" onclick="setStatus('Buyer link copied')">Share buyer link</button>
-          <button class="button dark" onclick="setStatus('Images added to current gallery')">Add photos</button>
+          <button class="button dark" onclick="triggerUpload()">Add photos</button>
         </div>
       </header>
 
       <section class="layout">
-        <aside class="panel">
-          <div class="panel-title">
-            <div>
-              <span>Setup</span>
-              <h2>Collection / Gallery</h2>
-            </div>
-            <div class="status-pill">Live</div>
-          </div>
-
-          <div class="form-stack">
-            <label>
-              Collection
-              <input id="collectionInput" type="text" value="Northside Photography" oninput="syncNames()">
-            </label>
-
-            <label>
-              Gallery
-              <input id="galleryInput" type="text" value="Saturday Morning Session" oninput="syncNames()">
-            </label>
-
-            <label>
-              Image price
-              <input id="priceInput" type="text" value="NZ$7.00" oninput="syncPrice()">
-            </label>
-
-            <label class="hidden-when-simple">
-              Fotomark
-              <input type="text" value="FOTODECK">
-            </label>
-          </div>
-
-          <div class="upload-card">
-            <div class="upload-drop" onclick="setStatus('Upload area clicked')">
-              <div>
-                <strong>Drop images here</strong>
-                <span>Fast display files, original delivery files kept safe.</span>
-              </div>
-            </div>
-
-            <div class="upload-meta hidden-when-simple">
-              <div class="mini-stat">
-                <strong id="imageCount">126</strong>
-                <span>Images uploaded</span>
-              </div>
-
-              <div class="mini-stat">
-                <strong>3</strong>
-                <span>Galleries</span>
-              </div>
-            </div>
-          </div>
-        </aside>
-
         <section class="main">
-          <section class="hero-card" id="heroCard" style="--hero: url('https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=1600&q=80')">
+          <section class="hero-card blank" id="heroCard">
             <p>Current Collection</p>
             <h1 id="collectionTitle">Northside Photography</h1>
           </section>
 
-          <section class="gallery-strip">
-            <button class="gallery-tile active" onclick="selectGallery(this, 'Saturday Morning Session', 48, 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=1600&q=80')" style="--image: url('https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=700&q=80')">
-              <strong>Saturday Morning Session</strong>
-              <span>48 images</span>
-            </button>
-
-            <button class="gallery-tile" onclick="selectGallery(this, 'Junior Finals', 37, 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80')" style="--image: url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=700&q=80')">
-              <strong>Junior Finals</strong>
-              <span>37 images</span>
-            </button>
-
-            <button class="gallery-tile" onclick="selectGallery(this, 'Prizegiving', 25, 'https://images.unsplash.com/photo-1520975682031-a577f7f67f29?auto=format&fit=crop&w=1600&q=80')" style="--image: url('https://images.unsplash.com/photo-1520975682031-a577f7f67f29?auto=format&fit=crop&w=700&q=80')">
-              <strong>Prizegiving</strong>
-              <span>25 images</span>
-            </button>
-
-            <button class="gallery-tile" onclick="selectGallery(this, 'Team Portraits', 16, 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=1600&q=80')" style="--image: url('https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=700&q=80')">
-              <strong>Team Portraits</strong>
-              <span>16 images</span>
-            </button>
-          </section>
-
-          <section class="images-panel">
-            <div class="images-head">
+          <section class="workspace-panel">
+            <div class="workspace-head">
               <div>
-                <h2 id="galleryTitle">Saturday Morning Session</h2>
-                <span id="galleryMeta">48 buyer-ready images</span>
+                <span>Main Work Panel</span>
+                <h2>Build the gallery</h2>
+              </div>
+              <div class="status-pill">Session only</div>
+            </div>
+
+            <section class="work-setup-grid">
+              <section class="setup-card">
+                <div class="panel-title">
+                  <div>
+                    <span>Setup</span>
+                    <h2>Collection / Gallery</h2>
+                  </div>
+                </div>
+
+                <div class="form-stack">
+                  <label>
+                    Collection
+                    <input id="collectionInput" type="text" value="Northside Photography" oninput="syncNames()">
+                  </label>
+
+                  <label>
+                    Gallery
+                    <input id="galleryInput" type="text" value="Saturday Morning Session" oninput="syncNames()">
+                  </label>
+
+                  <label>
+                    Image price
+                    <input id="priceInput" type="text" value="NZ$7.00" oninput="syncPrice()">
+                  </label>
+
+                  <label class="hidden-when-simple">
+                    Fotomark
+                    <input id="fotomarkInput" type="text" value="FOTODECK" oninput="syncFotomark()">
+                  </label>
+                </div>
+              </section>
+
+              <section class="upload-card">
+                <div class="panel-title">
+                  <div>
+                    <span>Upload</span>
+                    <h2>Add images</h2>
+                  </div>
+                </div>
+
+                <input class="file-input" id="fileInput" type="file" accept="image/*" multiple onchange="handleFiles(this.files)">
+
+                <div class="upload-drop" onclick="triggerUpload()">
+                  <div>
+                    <strong>Drop images here</strong>
+                    <span>Session-only preview. No image data is saved in the browser. Reloading the page clears uploaded previews.</span>
+                  </div>
+                </div>
+
+                <div class="upload-meta hidden-when-simple">
+                  <div class="mini-stat">
+                    <strong id="imageCount">0</strong>
+                    <span>Images in gallery</span>
+                  </div>
+
+                  <div class="mini-stat">
+                    <strong id="galleryCount">1</strong>
+                    <span>Galleries in collection</span>
+                  </div>
+                </div>
+              </section>
+            </section>
+
+            <section class="gallery-strip" id="galleryStrip"></section>
+
+            <section class="images-panel">
+              <div class="images-head">
+                <div>
+                  <h2 id="galleryTitle">Saturday Morning Session</h2>
+                  <span id="galleryMeta">0 buyer-ready images</span>
+                </div>
+
+                <button class="button dark" onclick="openBuyer()">Open selected gallery</button>
               </div>
 
-              <button class="button dark" onclick="openBuyer()">Open selected gallery</button>
-            </div>
+              <div id="adminImageArea"></div>
 
-            <div class="image-grid" id="adminImageGrid"></div>
+              <div class="image-actions">
+                <button class="button" onclick="setGalleryCoverFromSelected()">Set selected as Cover</button>
+                <button class="button" onclick="setGalleryHeroFromSelected()">Set selected as Hero</button>
+              </div>
+            </section>
 
-            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px;">
-              <button class="button" onclick="setGalleryCoverFromSelected()">Set selected as Cover</button>
-              <button class="button" onclick="setGalleryHeroFromSelected()">Set selected as Hero</button>
-            </div>
+            <section class="danger-zone hidden-when-simple">
+              <div class="panel-title">
+                <div>
+                  <span>Manage</span>
+                  <h2>Safe deletes</h2>
+                </div>
+              </div>
+
+              <div class="work-delete-row">
+                <button class="danger-button" onclick="deleteSelectedImage()">Delete selected image</button>
+                <button class="danger-button" onclick="deleteSelectedGallery()">Delete selected gallery</button>
+                <button class="danger-button" onclick="clearCurrentGallery()">Clear gallery</button>
+              </div>
+            </section>
           </section>
         </section>
-
-        <aside class="side-stack">
-          <section class="money-card">
-            <span>Total sales</span>
-            <strong>NZ$1,246</strong>
-            <p>Payments are handled online. Buyer download links are delivered by email.</p>
-          </section>
-
-          <section class="panel hidden-when-simple">
-            <div class="panel-title">
-              <div>
-                <span>Recent</span>
-                <h2>Orders</h2>
-              </div>
-            </div>
-
-            <div class="order-list">
-              <div class="order-row">
-                <div>
-                  <strong>sarah@example.com</strong>
-                  <span>4 images · Saturday Morning</span>
-                </div>
-                <em>NZ$28</em>
-              </div>
-
-              <div class="order-row">
-                <div>
-                  <strong>mike@example.com</strong>
-                  <span>2 images · Junior Finals</span>
-                </div>
-                <em>NZ$14</em>
-              </div>
-
-              <div class="order-row">
-                <div>
-                  <strong>club@example.com</strong>
-                  <span>8 images · Team Portraits</span>
-                </div>
-                <em>NZ$56</em>
-              </div>
-            </div>
-          </section>
-
-          <section class="panel danger-zone hidden-when-simple">
-            <div class="panel-title">
-              <div>
-                <span>Manage</span>
-                <h2>Safe deletes</h2>
-              </div>
-            </div>
-
-            <button class="danger-button" onclick="confirmAction('Delete selected image')">Delete selected image</button>
-            <button class="danger-button" onclick="confirmAction('Delete selected gallery')">Delete selected gallery</button>
-            <button class="danger-button" onclick="confirmAction('Delete collection')">Delete collection</button>
-          </section>
-        </aside>
       </section>
     </section>
 
@@ -815,12 +917,12 @@
       <section class="buyer-main">
         <button class="button" onclick="closeBuyer()">Back to admin</button>
 
-        <section class="buyer-head" id="buyerHero" style="--hero: url('https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=1600&q=80')">
+        <section class="buyer-head blank" id="buyerHero">
           <p>FOTODECK Buyer View</p>
           <h1 id="buyerGalleryTitle">Saturday Morning Session</h1>
         </section>
 
-        <section class="image-grid" id="buyerImageGrid"></section>
+        <section id="buyerImageArea"></section>
       </section>
 
       <aside class="buyer-cart">
@@ -840,13 +942,13 @@
 
         <label>
           Buyer email
-          <input type="email" value="buyer@example.com">
+          <input id="buyerEmailInput" type="email" value="buyer@example.com">
         </label>
 
-        <button class="button dark" onclick="checkout()">Pay by card</button>
+        <button class="button dark" onclick="checkout()">Mock checkout</button>
 
         <div class="notice">
-          After payment, FOTODECK emails the buyer their download links.
+          Working test only. This creates a local mock order and updates Stats.
         </div>
       </aside>
     </section>
@@ -865,210 +967,404 @@
 
       <div class="money-card">
         <span>Total sales</span>
-        <strong>NZ$1,246</strong>
-        <p>178 images sold across 14 orders.</p>
+        <strong id="statsTotal">NZ$0</strong>
+        <p id="statsSummary">0 images sold across 0 orders.</p>
       </div>
 
-      <br>
-
-      <div class="order-list">
-        <div class="order-row">
-          <div>
-            <strong>Northside Photography</strong>
-            <span>Saturday Morning Session</span>
-          </div>
-          <em>NZ$672</em>
-        </div>
-
-        <div class="order-row">
-          <div>
-            <strong>Northside Photography</strong>
-            <span>Junior Finals</span>
-          </div>
-          <em>NZ$364</em>
-        </div>
-
-        <div class="order-row">
-          <div>
-            <strong>Northside Photography</strong>
-            <span>Team Portraits</span>
-          </div>
-          <em>NZ$210</em>
-        </div>
-      </div>
+      <div class="order-list" id="orderList"></div>
     </section>
   </div>
 
   <script>
-    const imageUrls = [
-      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=500&q=80",
-      "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=500&q=80",
-      "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=500&q=80",
-      "https://images.unsplash.com/photo-1520975682031-a577f7f67f29?auto=format&fit=crop&w=500&q=80",
-      "https://images.unsplash.com/photo-1471341971476-ae15ff5dd4ea?auto=format&fit=crop&w=500&q=80",
-      "https://images.unsplash.com/photo-1480365501497-199581be0e66?auto=format&fit=crop&w=500&q=80",
-      "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=500&q=80",
-      "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?auto=format&fit=crop&w=500&q=80",
-      "https://images.unsplash.com/photo-1526512340740-9217d0159da9?auto=format&fit=crop&w=500&q=80",
-      "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=500&q=80"
-    ]
-
-    let selectedImages = []
-    let selectedAdminImageIndex = 0
-    let currentCoverImageUrl = ""
-    let currentHeroImageUrl = ""
-    let price = 7
-
-    function makeImageCard(url, index, mode) {
-      const button = document.createElement("button")
-      button.className = "image-card"
-      button.innerHTML = `<img src="${url}" alt="">`
-      if (mode === "admin" && index === selectedAdminImageIndex) {
-        button.classList.add("selected")
-      }
-      button.onclick = function () {
-        if (mode === "buyer") {
-          toggleBuyerImage(index, button)
-        } else {
-          button.classList.toggle("selected")
-          setAdminImage(index, button)
+    let state = {
+      collectionName: "Northside Photography",
+      selectedGalleryId: "gallery-1",
+      galleries: [
+        {
+          id: "gallery-1",
+          name: "Saturday Morning Session",
+          price: 7,
+          fotomark: "FOTODECK",
+          coverImageId: null,
+          heroImageId: null,
+          images: []
         }
-      }
-      return button
+      ],
+      orders: []
     }
 
-    function setAdminImage(index, button) {
-      selectedAdminImageIndex = index
+    let selectedAdminImageId = null
+    let selectedBuyerImageIds = []
 
-      document.querySelectorAll("#adminImageGrid .image-card").forEach((card) => {
-        card.classList.remove("selected")
-      })
-
-      if (button) {
-        button.classList.add("selected")
-      }
-
-      setStatus(`Image ${index + 1} selected in admin`)
+    function createId(prefix) {
+      return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`
     }
 
-    function setGalleryCoverFromSelected() {
-      const selectedUrl = imageUrls[selectedAdminImageIndex] || imageUrls[0]
-
-      currentCoverImageUrl = selectedUrl
-
-      document.querySelectorAll(".gallery-tile.active").forEach((tile) => {
-        tile.style.setProperty("--image", `url('${selectedUrl}')`)
-      })
-
-      setStatus(`Image ${selectedAdminImageIndex + 1} set as Gallery Cover`)
+    function getGallery() {
+      return state.galleries.find((gallery) => gallery.id === state.selectedGalleryId) || state.galleries[0] || null
     }
 
-    function setGalleryHeroFromSelected() {
-      const selectedUrl = imageUrls[selectedAdminImageIndex] || imageUrls[0]
-
-      currentHeroImageUrl = selectedUrl
-
-      document.getElementById("heroCard").style.setProperty("--hero", `url('${selectedUrl}')`)
-      document.getElementById("buyerHero").style.setProperty("--hero", `url('${selectedUrl}')`)
-
-      setStatus(`Image ${selectedAdminImageIndex + 1} set as Gallery Hero`)
-    }
-
-    function renderImages() {
-      const adminGrid = document.getElementById("adminImageGrid")
-      const buyerGrid = document.getElementById("buyerImageGrid")
-      adminGrid.innerHTML = ""
-      buyerGrid.innerHTML = ""
-
-      imageUrls.forEach((url, index) => {
-        adminGrid.appendChild(makeImageCard(url, index, "admin"))
-        buyerGrid.appendChild(makeImageCard(url, index, "buyer"))
-      })
-    }
-
-    function toggleBuyerImage(index, button) {
-      if (selectedImages.includes(index)) {
-        selectedImages = selectedImages.filter((item) => item !== index)
-        button.classList.remove("selected")
-      } else {
-        selectedImages.push(index)
-        button.classList.add("selected")
+    function getImageById(gallery, imageId) {
+      if (!gallery || !Array.isArray(gallery.images)) {
+        return null
       }
 
-      renderCart()
+      return gallery.images.find((image) => image.id === imageId) || null
     }
 
-    function renderCart() {
-      const cartLines = document.getElementById("cartLines")
-      const cartTotal = document.getElementById("cartTotal")
+    function getGalleryCover(gallery) {
+      const cover = getImageById(gallery, gallery.coverImageId)
+      return cover || gallery.images[0] || null
+    }
 
-      cartLines.innerHTML = ""
+    function getGalleryHero(gallery) {
+      const hero = getImageById(gallery, gallery.heroImageId)
+      return hero || getGalleryCover(gallery)
+    }
 
-      if (selectedImages.length === 0) {
-        cartLines.innerHTML = `<div class="cart-line"><span>No images selected</span><strong>—</strong></div>`
+    function money(amount) {
+      return `NZ$${Number(amount || 0).toFixed(0)}`
+    }
+
+    function parsePrice(value) {
+      const number = Number(String(value || "").replace(/[^0-9.]/g, ""))
+
+      if (!Number.isFinite(number) || number <= 0) {
+        return 7
       }
 
-      selectedImages.forEach((index) => {
-        const line = document.createElement("div")
-        line.className = "cart-line"
-        line.innerHTML = `<span>Image ${index + 1}</span><strong>NZ$${price}</strong>`
-        cartLines.appendChild(line)
-      })
-
-      cartTotal.textContent = `NZ$${selectedImages.length * price}`
+      return number
     }
 
-    function selectGallery(button, name, count, heroUrl) {
-      document.querySelectorAll(".gallery-tile").forEach((tile) => tile.classList.remove("active"))
-      button.classList.add("active")
+    function setStatus(message) {
+      document.getElementById("statusText").textContent = message
+    }
 
-      document.getElementById("galleryInput").value = name
-      document.getElementById("galleryTitle").textContent = name
-      document.getElementById("galleryMeta").textContent = `${count} buyer-ready images`
-      document.getElementById("imageCount").textContent = count
-      document.getElementById("heroCard").style.setProperty("--hero", `url('${heroUrl}')`)
-      document.getElementById("buyerHero").style.setProperty("--hero", `url('${heroUrl}')`)
-      document.getElementById("buyerGalleryTitle").textContent = name
+    function setBackground(elementId, image) {
+      const element = document.getElementById(elementId)
 
-      selectedImages = []
-      renderCart()
-      renderImages()
-      setStatus(`Selected ${name}`)
+      if (!element) {
+        return
+      }
+
+      if (!image || !image.previewUrl) {
+        element.classList.add("blank")
+        element.style.removeProperty("--hero")
+        return
+      }
+
+      element.classList.remove("blank")
+      element.style.setProperty("--hero", `url('${image.previewUrl}')`)
+    }
+
+    function triggerUpload() {
+      document.getElementById("fileInput").click()
+    }
+
+    function handleFiles(files) {
+      const gallery = getGallery()
+
+      if (!gallery || !files || files.length === 0) {
+        return
+      }
+
+      const fileList = Array.from(files).filter((file) => file.type.startsWith("image/"))
+
+      if (fileList.length === 0) {
+        setStatus("No image files selected")
+        return
+      }
+
+      fileList.forEach((file) => {
+        const image = {
+          id: createId("image"),
+          name: file.name,
+          file,
+          previewUrl: URL.createObjectURL(file)
+        }
+
+        gallery.images.push(image)
+
+        if (!gallery.coverImageId) {
+          gallery.coverImageId = image.id
+        }
+
+        if (!gallery.heroImageId) {
+          gallery.heroImageId = image.id
+        }
+
+        selectedAdminImageId = image.id
+      })
+
+      document.getElementById("fileInput").value = ""
+
+      setStatus(`${fileList.length} image${fileList.length === 1 ? "" : "s"} added for this session`)
+      renderAll()
+    }
+
+    function revokeImage(image) {
+      if (image && image.previewUrl && image.previewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(image.previewUrl)
+      }
     }
 
     function syncNames() {
-      const collection = document.getElementById("collectionInput").value || "Collection"
-      const gallery = document.getElementById("galleryInput").value || "Gallery"
+      const gallery = getGallery()
 
-      document.getElementById("collectionTitle").textContent = collection
-      document.getElementById("galleryTitle").textContent = gallery
-      document.getElementById("buyerGalleryTitle").textContent = gallery
+      if (!gallery) {
+        return
+      }
+
+      state.collectionName = document.getElementById("collectionInput").value || "Collection"
+      gallery.name = document.getElementById("galleryInput").value || "Gallery"
+
       setStatus("Names updated")
+      renderAll()
     }
 
     function syncPrice() {
-      const raw = document.getElementById("priceInput").value
-      const number = Number(String(raw).replace(/[^0-9.]/g, ""))
-      price = Number.isFinite(number) && number > 0 ? number : 7
-      renderCart()
-      setStatus(`Price set to NZ$${price}`)
+      const gallery = getGallery()
+
+      if (!gallery) {
+        return
+      }
+
+      gallery.price = parsePrice(document.getElementById("priceInput").value)
+
+      setStatus(`Price set to NZ$${gallery.price}`)
+      renderAll()
+    }
+
+    function syncFotomark() {
+      const gallery = getGallery()
+
+      if (!gallery) {
+        return
+      }
+
+      gallery.fotomark = document.getElementById("fotomarkInput").value || "FOTODECK"
+
+      setStatus("Fotomark updated")
+      renderAll()
+    }
+
+    function createGallery() {
+      const gallery = {
+        id: createId("gallery"),
+        name: "New Gallery",
+        price: 7,
+        fotomark: "FOTODECK",
+        coverImageId: null,
+        heroImageId: null,
+        images: []
+      }
+
+      state.galleries.push(gallery)
+      state.selectedGalleryId = gallery.id
+      selectedAdminImageId = null
+      selectedBuyerImageIds = []
+
+      setStatus("New gallery created")
+      renderAll()
+    }
+
+    function selectGallery(galleryId) {
+      const gallery = state.galleries.find((item) => item.id === galleryId)
+
+      if (!gallery) {
+        return
+      }
+
+      state.selectedGalleryId = gallery.id
+      selectedAdminImageId = gallery.images[0] ? gallery.images[0].id : null
+      selectedBuyerImageIds = []
+
+      setStatus(`Selected ${gallery.name}`)
+      renderAll()
+    }
+
+    function setGalleryCoverFromSelected() {
+      const gallery = getGallery()
+
+      if (!gallery || !selectedAdminImageId) {
+        setStatus("Select an image first")
+        return
+      }
+
+      gallery.coverImageId = selectedAdminImageId
+
+      setStatus("Selected image set as cover")
+      renderAll()
+    }
+
+    function setGalleryHeroFromSelected() {
+      const gallery = getGallery()
+
+      if (!gallery || !selectedAdminImageId) {
+        setStatus("Select an image first")
+        return
+      }
+
+      gallery.heroImageId = selectedAdminImageId
+
+      setStatus("Selected image set as hero")
+      renderAll()
+    }
+
+    function deleteSelectedImage() {
+      const gallery = getGallery()
+
+      if (!gallery || !selectedAdminImageId) {
+        setStatus("No image selected")
+        return
+      }
+
+      const image = getImageById(gallery, selectedAdminImageId)
+
+      if (!image) {
+        setStatus("Selected image not found")
+        return
+      }
+
+      const ok = window.confirm(`Delete ${image.name}?\n\nThis is only the session test model.`)
+
+      if (!ok) {
+        setStatus("Delete image cancelled")
+        return
+      }
+
+      revokeImage(image)
+
+      gallery.images = gallery.images.filter((item) => item.id !== selectedAdminImageId)
+
+      if (gallery.coverImageId === selectedAdminImageId) {
+        gallery.coverImageId = gallery.images[0] ? gallery.images[0].id : null
+      }
+
+      if (gallery.heroImageId === selectedAdminImageId) {
+        gallery.heroImageId = gallery.images[0] ? gallery.images[0].id : null
+      }
+
+      selectedBuyerImageIds = selectedBuyerImageIds.filter((id) => id !== selectedAdminImageId)
+      selectedAdminImageId = gallery.images[0] ? gallery.images[0].id : null
+
+      setStatus(`${image.name} deleted`)
+      renderAll()
+    }
+
+    function deleteSelectedGallery() {
+      const gallery = getGallery()
+
+      if (!gallery) {
+        return
+      }
+
+      if (state.galleries.length <= 1) {
+        setStatus("Keep one gallery in the test model")
+        return
+      }
+
+      const ok = window.confirm(`Delete ${gallery.name}?\n\nThis is only the session test model.`)
+
+      if (!ok) {
+        setStatus("Delete gallery cancelled")
+        return
+      }
+
+      gallery.images.forEach(revokeImage)
+
+      state.galleries = state.galleries.filter((item) => item.id !== gallery.id)
+      state.selectedGalleryId = state.galleries[0].id
+      selectedAdminImageId = null
+      selectedBuyerImageIds = []
+
+      setStatus(`${gallery.name} deleted`)
+      renderAll()
+    }
+
+    function clearCurrentGallery() {
+      const gallery = getGallery()
+
+      if (!gallery) {
+        return
+      }
+
+      const ok = window.confirm(`Clear all images from ${gallery.name}?\n\nThis is only the session test model.`)
+
+      if (!ok) {
+        setStatus("Clear gallery cancelled")
+        return
+      }
+
+      gallery.images.forEach(revokeImage)
+      gallery.images = []
+      gallery.coverImageId = null
+      gallery.heroImageId = null
+      selectedAdminImageId = null
+      selectedBuyerImageIds = []
+
+      setStatus(`${gallery.name} cleared`)
+      renderAll()
+    }
+
+    function toggleBuyerImage(imageId) {
+      if (selectedBuyerImageIds.includes(imageId)) {
+        selectedBuyerImageIds = selectedBuyerImageIds.filter((id) => id !== imageId)
+      } else {
+        selectedBuyerImageIds.push(imageId)
+      }
+
+      renderAll()
     }
 
     function openBuyer() {
       document.getElementById("adminScreen").style.display = "none"
       document.getElementById("buyerScreen").classList.add("open")
-      selectedImages = []
-      renderImages()
-      renderCart()
+      selectedBuyerImageIds = []
+      renderAll()
     }
 
     function closeBuyer() {
       document.getElementById("buyerScreen").classList.remove("open")
       document.getElementById("adminScreen").style.display = "grid"
+      selectedBuyerImageIds = []
       setStatus("Returned from buyer view")
+      renderAll()
+    }
+
+    function checkout() {
+      const gallery = getGallery()
+
+      if (!gallery) {
+        return
+      }
+
+      if (selectedBuyerImageIds.length === 0) {
+        alert("Select at least one image first.")
+        return
+      }
+
+      const buyerEmail = document.getElementById("buyerEmailInput").value || "buyer@example.com"
+      const total = selectedBuyerImageIds.length * gallery.price
+
+      state.orders.unshift({
+        id: createId("order"),
+        collectionName: state.collectionName,
+        galleryName: gallery.name,
+        buyerEmail,
+        imageCount: selectedBuyerImageIds.length,
+        total
+      })
+
+      selectedBuyerImageIds = []
+
+      alert(`Mock checkout complete\n\n${money(total)}\n\nStats have been updated.`)
+      setStatus("Mock order created")
+      renderAll()
     }
 
     function openStats() {
+      renderStats()
       document.getElementById("statsDrawer").classList.add("open")
     }
 
@@ -1084,26 +1380,210 @@
       setStatus("Clutter view toggled")
     }
 
-    function confirmAction(action) {
-      const ok = window.confirm(`${action}?\n\nThis is only a mock confirmation.`)
-      setStatus(ok ? `${action} confirmed` : `${action} cancelled`)
+    function makeImageButton(image, gallery, mode) {
+      const button = document.createElement("button")
+      button.className = "image-card"
+
+      if (mode === "admin" && image.id === selectedAdminImageId) {
+        button.classList.add("selected")
+      }
+
+      if (mode === "buyer" && selectedBuyerImageIds.includes(image.id)) {
+        button.classList.add("selected")
+      }
+
+      if (image.id === gallery.coverImageId) {
+        button.classList.add("cover")
+      }
+
+      if (image.id === gallery.heroImageId) {
+        button.classList.add("hero")
+      }
+
+      button.innerHTML = `<img src="${image.previewUrl}" alt="${image.name}">`
+
+      button.onclick = function () {
+        if (mode === "buyer") {
+          toggleBuyerImage(image.id)
+        } else {
+          selectedAdminImageId = image.id
+          setStatus(`${image.name} selected`)
+          renderAll()
+        }
+      }
+
+      return button
     }
 
-    function checkout() {
-      if (selectedImages.length === 0) {
-        alert("Select at least one image first.")
+    function renderGalleryStrip() {
+      const strip = document.getElementById("galleryStrip")
+
+      strip.innerHTML = ""
+
+      state.galleries.forEach((gallery) => {
+        const cover = getGalleryCover(gallery)
+        const button = document.createElement("button")
+
+        button.className = gallery.id === state.selectedGalleryId ? "gallery-tile active" : "gallery-tile"
+
+        if (cover && cover.previewUrl) {
+          button.style.setProperty("--image", `url('${cover.previewUrl}')`)
+        } else {
+          button.classList.add("blank")
+        }
+
+        button.onclick = function () {
+          selectGallery(gallery.id)
+        }
+
+        button.innerHTML = `
+          <strong>${gallery.name}</strong>
+          <span>${gallery.images.length} images</span>
+        `
+
+        strip.appendChild(button)
+      })
+    }
+
+    function renderAdminImages(gallery) {
+      const area = document.getElementById("adminImageArea")
+
+      area.innerHTML = ""
+
+      if (!gallery || gallery.images.length === 0) {
+        area.innerHTML = `<div class="empty-grid">No images yet. Use the upload zone to add photos for this session.</div>`
         return
       }
 
-      alert(`Mock checkout\n\n${selectedImages.length} image(s)\nTotal: NZ$${selectedImages.length * price}\n\nBuyer would now pay by card.`)
+      const grid = document.createElement("div")
+
+      grid.className = "image-grid"
+
+      gallery.images.forEach((image) => {
+        grid.appendChild(makeImageButton(image, gallery, "admin"))
+      })
+
+      area.appendChild(grid)
     }
 
-    function setStatus(message) {
-      document.getElementById("statusText").textContent = message
+    function renderBuyerImages(gallery) {
+      const area = document.getElementById("buyerImageArea")
+
+      area.innerHTML = ""
+
+      if (!gallery || gallery.images.length === 0) {
+        area.innerHTML = `<div class="empty-grid">No buyer images available yet.</div>`
+        return
+      }
+
+      const grid = document.createElement("div")
+
+      grid.className = "image-grid"
+
+      gallery.images.forEach((image) => {
+        grid.appendChild(makeImageButton(image, gallery, "buyer"))
+      })
+
+      area.appendChild(grid)
     }
 
-    renderImages()
-    renderCart()
+    function renderCart() {
+      const gallery = getGallery()
+      const cartLines = document.getElementById("cartLines")
+      const cartTotal = document.getElementById("cartTotal")
+
+      cartLines.innerHTML = ""
+
+      if (!gallery || selectedBuyerImageIds.length === 0) {
+        cartLines.innerHTML = `<div class="cart-line"><span>No images selected</span><strong>—</strong></div>`
+        cartTotal.textContent = "NZ$0"
+        return
+      }
+
+      selectedBuyerImageIds.forEach((imageId) => {
+        const image = getImageById(gallery, imageId)
+        const line = document.createElement("div")
+
+        line.className = "cart-line"
+        line.innerHTML = `<span>${image ? image.name : "Image"}</span><strong>${money(gallery.price)}</strong>`
+
+        cartLines.appendChild(line)
+      })
+
+      cartTotal.textContent = money(selectedBuyerImageIds.length * gallery.price)
+    }
+
+    function renderStats() {
+      const total = state.orders.reduce((sum, order) => sum + Number(order.total || 0), 0)
+      const imageCount = state.orders.reduce((sum, order) => sum + Number(order.imageCount || 0), 0)
+      const orderList = document.getElementById("orderList")
+
+      document.getElementById("statsTotal").textContent = money(total)
+      document.getElementById("statsSummary").textContent = `${imageCount} images sold across ${state.orders.length} order${state.orders.length === 1 ? "" : "s"}.`
+
+      orderList.innerHTML = ""
+
+      if (state.orders.length === 0) {
+        orderList.innerHTML = `<div class="order-row"><div><strong>No orders yet</strong><span>Mock checkout will add orders here</span></div><em>NZ$0</em></div>`
+        return
+      }
+
+      state.orders.slice(0, 12).forEach((order) => {
+        const row = document.createElement("div")
+
+        row.className = "order-row"
+        row.innerHTML = `
+          <div>
+            <strong>${order.collectionName}</strong>
+            <span>${order.galleryName} · ${order.imageCount} image${order.imageCount === 1 ? "" : "s"} · ${order.buyerEmail}</span>
+          </div>
+          <em>${money(order.total)}</em>
+        `
+
+        orderList.appendChild(row)
+      })
+    }
+
+    function renderAll() {
+      const gallery = getGallery()
+
+      if (!gallery) {
+        return
+      }
+
+      if (!selectedAdminImageId || !getImageById(gallery, selectedAdminImageId)) {
+        selectedAdminImageId = gallery.images[0] ? gallery.images[0].id : null
+      }
+
+      document.getElementById("collectionInput").value = state.collectionName
+      document.getElementById("galleryInput").value = gallery.name
+      document.getElementById("priceInput").value = `NZ$${gallery.price.toFixed(2)}`
+      document.getElementById("fotomarkInput").value = gallery.fotomark || "FOTODECK"
+
+      document.getElementById("collectionTitle").textContent = state.collectionName
+      document.getElementById("galleryTitle").textContent = gallery.name
+      document.getElementById("buyerGalleryTitle").textContent = gallery.name
+      document.getElementById("galleryMeta").textContent = `${gallery.images.length} buyer-ready images`
+      document.getElementById("imageCount").textContent = gallery.images.length
+      document.getElementById("galleryCount").textContent = state.galleries.length
+
+      setBackground("heroCard", getGalleryHero(gallery))
+      setBackground("buyerHero", getGalleryHero(gallery))
+
+      renderGalleryStrip()
+      renderAdminImages(gallery)
+      renderBuyerImages(gallery)
+      renderCart()
+      renderStats()
+    }
+
+    window.addEventListener("beforeunload", function () {
+      state.galleries.forEach((gallery) => {
+        gallery.images.forEach(revokeImage)
+      })
+    })
+
+    renderAll()
   </script>
 </body>
 </html>
