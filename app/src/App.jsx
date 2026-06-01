@@ -74,10 +74,6 @@ function App() {
   const [savedEvents, setSavedEvents] = useState([])
   const [savedStatus, setSavedStatus] = useState('')
   const [eventCoverUrls, setEventCoverUrls] = useState({})
-  const [eventHeroUrls, setEventHeroUrls] = useState({})
-  const [galleryImageStatus, setGalleryImageStatus] = useState('No cover/hero edit yet')
-  const [savingCoverImageId, setSavingCoverImageId] = useState('')
-  const [savingHeroImageId, setSavingHeroImageId] = useState('')
   const [deleteStatus, setDeleteStatus] = useState('No delete action yet')
   const [deletingPhotoId, setDeletingPhotoId] = useState('')
   const [deletingEventId, setDeletingEventId] = useState('')
@@ -200,9 +196,6 @@ function App() {
     setPurchasedImages([])
     setPurchasedStatus('')
     setIsLoadingPurchasedImages(false)
-    setGalleryImageStatus('No cover/hero edit yet')
-    setSavingCoverImageId('')
-    setSavingHeroImageId('')
   }
 
   function clearCollectionEditState() {
@@ -225,8 +218,6 @@ function App() {
       priceCents: photo.price_cents || 0,
       uploadedTime: getUploadedTime(photo),
       watermarkText: photo.watermark_text || '',
-      collectionId: photo.collection_id || '',
-      eventId: photo.event_id || '',
     }
   }
 
@@ -243,93 +234,6 @@ function App() {
     const eventId = getCurrentEventId()
 
     return `/view?collectionId=${encodeURIComponent(collectionId)}&eventId=${encodeURIComponent(eventId)}`
-  }
-
-  async function updateGalleryImageChoice({
-    collectionId,
-    eventId,
-    coverImageId,
-    heroImageId,
-  }) {
-    const response = await fetch('/api/update-gallery-image-choice', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        collectionId,
-        eventId,
-        coverImageId,
-        heroImageId,
-      }),
-    })
-
-    const result = await response.json().catch(() => ({}))
-
-    if (!response.ok) {
-      return {
-        ok: false,
-        error: result.error || 'Gallery image choice could not be saved',
-      }
-    }
-
-    return {
-      ok: Boolean(result.ok),
-      result,
-      error: result.error || '',
-    }
-  }
-
-  function getActiveEventRecord() {
-    return savedEvents.find((event) => event.id === activeEventId) || null
-  }
-
-  function getResolvedCoverPhotoFromPhotos(event, photoList) {
-    if (!photoList || photoList.length === 0) {
-      return null
-    }
-
-    const coverImageId = event?.cover_image_id || ''
-    const selectedCoverPhoto = coverImageId
-      ? photoList.find((photo) => photo.id === coverImageId)
-      : null
-
-    return selectedCoverPhoto || photoList[0] || null
-  }
-
-  function getResolvedHeroPhotoFromPhotos(event, photoList) {
-    if (!photoList || photoList.length === 0) {
-      return null
-    }
-
-    const heroImageId = event?.hero_image_id || ''
-    const selectedHeroPhoto = heroImageId
-      ? photoList.find((photo) => photo.id === heroImageId)
-      : null
-
-    return selectedHeroPhoto || getResolvedCoverPhotoFromPhotos(event, photoList)
-  }
-
-  function getActiveHeroUrl() {
-    if (activeEventId && eventHeroUrls[activeEventId]) {
-      return eventHeroUrls[activeEventId]
-    }
-
-    const activeEvent = getActiveEventRecord()
-    const heroPhoto = getResolvedHeroPhotoFromPhotos(activeEvent, photos)
-
-    return heroPhoto?.previewUrl || ''
-  }
-
-  function getActiveCoverUrl() {
-    if (activeEventId && eventCoverUrls[activeEventId]) {
-      return eventCoverUrls[activeEventId]
-    }
-
-    const activeEvent = getActiveEventRecord()
-    const coverPhoto = getResolvedCoverPhotoFromPhotos(activeEvent, photos)
-
-    return coverPhoto?.previewUrl || ''
   }
 
   function getPhotoPrice(photo) {
@@ -1010,7 +914,6 @@ function App() {
 
   async function loadEventCoverPhotos(collectionsToUse, eventsToUse) {
     const nextCoverUrls = {}
-    const nextHeroUrls = {}
 
     for (const event of eventsToUse) {
       try {
@@ -1030,29 +933,14 @@ function App() {
         }
 
         const sortedImages = sortPhotosFirstFirst(apiResponse.result.images)
-        const firstImage = sortedImages[0] || null
-        const selectedCoverImage = event.cover_image_id
-          ? sortedImages.find((image) => image.id === event.cover_image_id)
-          : null
-        const resolvedCoverImage = selectedCoverImage || firstImage
-        const selectedHeroImage = event.hero_image_id
-          ? sortedImages.find((image) => image.id === event.hero_image_id)
-          : null
-        const resolvedHeroImage = selectedHeroImage || resolvedCoverImage || firstImage
+        const firstImage = sortedImages[0]
 
-        if (resolvedCoverImage?.display_key) {
-          nextCoverUrls[event.id] = makeDisplayPhotoUrl(resolvedCoverImage.display_key)
+        if (firstImage?.display_key) {
+          nextCoverUrls[event.id] = makeDisplayPhotoUrl(firstImage.display_key)
+          setEventCoverUrls({ ...nextCoverUrls })
         }
-
-        if (resolvedHeroImage?.display_key) {
-          nextHeroUrls[event.id] = makeDisplayPhotoUrl(resolvedHeroImage.display_key)
-        }
-
-        setEventCoverUrls({ ...nextCoverUrls })
-        setEventHeroUrls({ ...nextHeroUrls })
       } catch {
         nextCoverUrls[event.id] = ''
-        nextHeroUrls[event.id] = ''
       }
     }
   }
@@ -1067,7 +955,6 @@ function App() {
         setSavedCollections([])
         setSavedEvents([])
         setEventCoverUrls({})
-        setEventHeroUrls({})
         setSavedStatus(apiResponse.error || 'Collections could not be loaded')
         return
       }
@@ -1079,14 +966,12 @@ function App() {
       setSavedEvents(nextEvents)
       setSavedStatus('')
       setEventCoverUrls({})
-      setEventHeroUrls({})
 
       loadEventCoverPhotos(nextCollections, nextEvents)
     } catch (error) {
       setSavedCollections([])
       setSavedEvents([])
       setEventCoverUrls({})
-      setEventHeroUrls({})
       setSavedStatus(error.message || 'Collections could not be loaded')
     }
   }
@@ -1127,94 +1012,6 @@ function App() {
     )
 
     await handleLoadPublicEvent(collection.id, event.id)
-  }
-
-  async function handleSetGalleryImageChoice(photo, imageType) {
-    const collectionId = activeCollectionId || getCurrentCollectionId()
-    const eventId = activeEventId || getCurrentEventId()
-    const activeEvent = savedEvents.find((event) => event.id === eventId) || null
-    const isCoverChoice = imageType === 'cover'
-    const isHeroChoice = imageType === 'hero'
-
-    if (!collectionId || !eventId) {
-      setGalleryImageStatus('Select a saved gallery before choosing cover or hero image')
-      return
-    }
-
-    if (!photo?.id) {
-      setGalleryImageStatus('Choose a valid photo')
-      return
-    }
-
-    const nextCoverImageId = isCoverChoice ? photo.id : activeEvent?.cover_image_id || ''
-    const nextHeroImageId = isHeroChoice ? photo.id : activeEvent?.hero_image_id || ''
-
-    if (isCoverChoice) {
-      setSavingCoverImageId(photo.id)
-      setGalleryImageStatus(`Saving gallery cover image: ${photo.name}`)
-    }
-
-    if (isHeroChoice) {
-      setSavingHeroImageId(photo.id)
-      setGalleryImageStatus(`Saving gallery hero image: ${photo.name}`)
-    }
-
-    try {
-      const apiResponse = await updateGalleryImageChoice({
-        collectionId,
-        eventId,
-        coverImageId: nextCoverImageId,
-        heroImageId: nextHeroImageId,
-      })
-
-      if (!apiResponse.ok) {
-        setGalleryImageStatus(apiResponse.error || 'Gallery image choice could not be saved')
-        setSavingCoverImageId('')
-        setSavingHeroImageId('')
-        return
-      }
-
-      setSavedEvents((currentEvents) =>
-        currentEvents.map((event) => {
-          if (event.id !== eventId) {
-            return event
-          }
-
-          return {
-            ...event,
-            cover_image_id: nextCoverImageId,
-            hero_image_id: nextHeroImageId,
-          }
-        })
-      )
-
-      if (isCoverChoice) {
-        setEventCoverUrls((currentUrls) => ({
-          ...currentUrls,
-          [eventId]: photo.previewUrl,
-        }))
-      }
-
-      if (isHeroChoice) {
-        setEventHeroUrls((currentUrls) => ({
-          ...currentUrls,
-          [eventId]: photo.previewUrl,
-        }))
-      }
-
-      setGalleryImageStatus(
-        isCoverChoice
-          ? `Saved ${photo.name} as gallery cover image`
-          : `Saved ${photo.name} as gallery hero image`
-      )
-      setSavingCoverImageId('')
-      setSavingHeroImageId('')
-      await handleLoadSavedCollectionsEvents()
-    } catch (error) {
-      setGalleryImageStatus(error.message || 'Gallery image choice could not be saved')
-      setSavingCoverImageId('')
-      setSavingHeroImageId('')
-    }
   }
 
   async function handleDeletePhoto(photo) {
@@ -1290,16 +1087,6 @@ function App() {
       }
 
       setSavedEvents((currentEvents) => currentEvents.filter((item) => item.id !== event.id))
-      setEventCoverUrls((currentUrls) => {
-        const nextUrls = { ...currentUrls }
-        delete nextUrls[event.id]
-        return nextUrls
-      })
-      setEventHeroUrls((currentUrls) => {
-        const nextUrls = { ...currentUrls }
-        delete nextUrls[event.id]
-        return nextUrls
-      })
 
       setSavedCollections((currentCollections) =>
         currentCollections.map((item) => {
@@ -1371,26 +1158,8 @@ function App() {
         return
       }
 
-      const deletedEventIds = savedEvents
-        .filter((event) => event.collection_id === collection.id)
-        .map((event) => event.id)
-
       setSavedCollections((currentCollections) => currentCollections.filter((item) => item.id !== collection.id))
       setSavedEvents((currentEvents) => currentEvents.filter((item) => item.collection_id !== collection.id))
-      setEventCoverUrls((currentUrls) => {
-        const nextUrls = { ...currentUrls }
-        deletedEventIds.forEach((eventId) => {
-          delete nextUrls[eventId]
-        })
-        return nextUrls
-      })
-      setEventHeroUrls((currentUrls) => {
-        const nextUrls = { ...currentUrls }
-        deletedEventIds.forEach((eventId) => {
-          delete nextUrls[eventId]
-        })
-        return nextUrls
-      })
 
       if (activeCollectionId === collection.id) {
         setActiveCollectionId('')
@@ -1482,9 +1251,6 @@ function App() {
     setDeletingPhotoId('')
     setDeletingEventId('')
     setDeletingCollectionId('')
-    setGalleryImageStatus('No cover/hero edit yet')
-    setSavingCoverImageId('')
-    setSavingHeroImageId('')
     setCartItems([])
     setBuyerEmail('')
     setCartStatus('Cart is empty')
@@ -2147,14 +1913,6 @@ function App() {
                                     <span>
                                       {event.photo_count} photo{event.photo_count === 1 ? '' : 's'}
                                     </span>
-                                    <br />
-                                    <span>
-                                      Cover: {event.cover_image_id ? 'chosen' : 'first photo'}
-                                    </span>
-                                    <br />
-                                    <span>
-                                      Hero: {event.hero_image_id ? 'chosen' : event.cover_image_id ? 'cover image' : 'first photo'}
-                                    </span>
                                   </div>
                                 </button>
 
@@ -2217,8 +1975,6 @@ function App() {
                 <span>{loadStatus}</span>
                 <br />
                 <span>{deleteStatus}</span>
-                <br />
-                <span>{galleryImageStatus}</span>
               </div>
 
               {photos.length === 0 && (
@@ -2243,30 +1999,6 @@ function App() {
 
                       <div className="buy-row">
                         <span>{photo.name}</span>
-                        <button
-                          type="button"
-                          onClick={() => handleSetGalleryImageChoice(photo, 'cover')}
-                          disabled={
-                            !activeCollectionId ||
-                            !activeEventId ||
-                            savingCoverImageId === photo.id ||
-                            isUploading
-                          }
-                        >
-                          {savingCoverImageId === photo.id ? 'Saving cover...' : 'Set Cover'}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleSetGalleryImageChoice(photo, 'hero')}
-                          disabled={
-                            !activeCollectionId ||
-                            !activeEventId ||
-                            savingHeroImageId === photo.id ||
-                            isUploading
-                          }
-                        >
-                          {savingHeroImageId === photo.id ? 'Saving hero...' : 'Set Hero'}
-                        </button>
                         <button
                           type="button"
                           onClick={() => handleDeletePhoto(photo)}
@@ -2318,51 +2050,6 @@ function App() {
                 {cartItems.length} selected / NZ${cartTotal.toFixed(2)}
               </div>
             </div>
-
-            {(getActiveHeroUrl() || getActiveCoverUrl()) && (
-              <section
-                style={{
-                  minHeight: '220px',
-                  borderRadius: '30px',
-                  marginBottom: '18px',
-                  padding: '22px',
-                  display: 'flex',
-                  alignItems: 'flex-end',
-                  background: `linear-gradient(180deg, rgba(17,24,39,0.05), rgba(17,24,39,0.72)), url("${getActiveHeroUrl() || getActiveCoverUrl()}") center/cover`,
-                  boxShadow: '0 18px 40px rgba(17, 24, 39, 0.16)',
-                  overflow: 'hidden',
-                }}
-              >
-                <div
-                  style={{
-                    color: '#ffffff',
-                    textShadow: '0 2px 14px rgba(0,0,0,0.45)',
-                  }}
-                >
-                  <p
-                    style={{
-                      margin: 0,
-                      fontSize: '0.82rem',
-                      fontWeight: 900,
-                      letterSpacing: '0.08em',
-                      textTransform: 'uppercase',
-                    }}
-                  >
-                    {collectionName || 'Collection'}
-                  </p>
-                  <h1
-                    style={{
-                      margin: '4px 0 0',
-                      fontSize: '2.35rem',
-                      lineHeight: 0.95,
-                      letterSpacing: '-0.07em',
-                    }}
-                  >
-                    {eventName || 'Gallery'}
-                  </h1>
-                </div>
-              </section>
-            )}
 
             {purchasedSessionId && (
               <section className="studio-preview" style={{ marginBottom: '18px' }}>
