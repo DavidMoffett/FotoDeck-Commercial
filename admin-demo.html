@@ -745,6 +745,11 @@
             </div>
 
             <div class="image-grid" id="adminImageGrid"></div>
+
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px;">
+              <button class="button" onclick="setGalleryCoverFromSelected()">Set selected as Cover</button>
+              <button class="button" onclick="setGalleryHeroFromSelected()">Set selected as Hero</button>
+            </div>
           </section>
         </section>
 
@@ -909,21 +914,64 @@
     ]
 
     let selectedImages = []
+    let selectedAdminImageIndex = 0
+    let currentCoverImageUrl = ""
+    let currentHeroImageUrl = ""
     let price = 7
 
     function makeImageCard(url, index, mode) {
       const button = document.createElement("button")
       button.className = "image-card"
       button.innerHTML = `<img src="${url}" alt="">`
+      if (mode === "admin" && index === selectedAdminImageIndex) {
+        button.classList.add("selected")
+      }
       button.onclick = function () {
         if (mode === "buyer") {
           toggleBuyerImage(index, button)
         } else {
           button.classList.toggle("selected")
-          setStatus(`Image ${index + 1} selected in admin`)
+          setAdminImage(index, button)
         }
       }
       return button
+    }
+
+    function setAdminImage(index, button) {
+      selectedAdminImageIndex = index
+
+      document.querySelectorAll("#adminImageGrid .image-card").forEach((card) => {
+        card.classList.remove("selected")
+      })
+
+      if (button) {
+        button.classList.add("selected")
+      }
+
+      setStatus(`Image ${index + 1} selected in admin`)
+    }
+
+    function setGalleryCoverFromSelected() {
+      const selectedUrl = imageUrls[selectedAdminImageIndex] || imageUrls[0]
+
+      currentCoverImageUrl = selectedUrl
+
+      document.querySelectorAll(".gallery-tile.active").forEach((tile) => {
+        tile.style.setProperty("--image", `url('${selectedUrl}')`)
+      })
+
+      setStatus(`Image ${selectedAdminImageIndex + 1} set as Gallery Cover`)
+    }
+
+    function setGalleryHeroFromSelected() {
+      const selectedUrl = imageUrls[selectedAdminImageIndex] || imageUrls[0]
+
+      currentHeroImageUrl = selectedUrl
+
+      document.getElementById("heroCard").style.setProperty("--hero", `url('${selectedUrl}')`)
+      document.getElementById("buyerHero").style.setProperty("--hero", `url('${selectedUrl}')`)
+
+      setStatus(`Image ${selectedAdminImageIndex + 1} set as Gallery Hero`)
     }
 
     function renderImages() {
@@ -957,7 +1005,7 @@
       cartLines.innerHTML = ""
 
       if (selectedImages.length === 0) {
-        cartLines.innerHTML = `<div class="cart-line"><span>No images selected</span><strong>—</strong></div>`
+        cartLines.innerHTML = `<div class="cart-line"><span>No images selected</span><strong>ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</strong></div>`
       }
 
       selectedImages.forEach((index) => {
