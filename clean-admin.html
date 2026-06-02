@@ -719,6 +719,9 @@
 
         <div class="top-actions">
           <button class="button" onclick="createGallery()">New gallery</button>
+          <button class="button" onclick="saveTestSession()">Save session</button>
+          <button class="button" onclick="loadTestSession()">Load session</button>
+          <button class="button" onclick="clearSavedSession()">Clear saved</button>
           <button class="button" onclick="openStats()">Stats</button>
           <button class="button" onclick="openBuyer()">Open buyer view</button>
           <button class="button gold" onclick="setStatus('Buyer link copied')">Share buyer link</button>
@@ -914,11 +917,99 @@
       orders: []
     }
 
+    const STORAGE_KEY = "fotodeck-clean-admin-test-session"
+
     let selectedImageId = null
     let selectedBuyerImageIds = []
 
     function createId(prefix) {
       return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`
+    }
+
+    function makeSessionCopy() {
+      return {
+        collectionName: state.collectionName,
+        selectedGalleryId: state.selectedGalleryId,
+        galleries: state.galleries.map((gallery) => {
+          return {
+            id: gallery.id,
+            name: gallery.name,
+            price: gallery.price,
+            coverImageId: null,
+            heroImageId: null,
+            images: []
+          }
+        }),
+        orders: state.orders.map((order) => {
+          return {
+            collectionName: order.collectionName,
+            galleryName: order.galleryName,
+            imageCount: order.imageCount,
+            buyerEmail: order.buyerEmail,
+            total: order.total
+          }
+        })
+      }
+    }
+
+    function saveTestSession() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(makeSessionCopy()))
+      setStatus("Test session saved")
+    }
+
+    function loadTestSession() {
+      const saved = localStorage.getItem(STORAGE_KEY)
+
+      if (!saved) {
+        setStatus("No saved test session")
+        return
+      }
+
+      try {
+        const data = JSON.parse(saved)
+
+        state.collectionName = data.collectionName || "Collection"
+        state.galleries = Array.isArray(data.galleries) && data.galleries.length > 0
+          ? data.galleries.map((gallery) => {
+              return {
+                id: gallery.id || createId("gallery"),
+                name: gallery.name || "Gallery",
+                price: Number(gallery.price || 7),
+                coverImageId: null,
+                heroImageId: null,
+                images: []
+              }
+            })
+          : [
+              {
+                id: "gallery-1",
+                name: "Gallery",
+                price: 7,
+                coverImageId: null,
+                heroImageId: null,
+                images: []
+              }
+            ]
+
+        state.selectedGalleryId = state.galleries.some((gallery) => gallery.id === data.selectedGalleryId)
+          ? data.selectedGalleryId
+          : state.galleries[0].id
+
+        state.orders = Array.isArray(data.orders) ? data.orders : []
+
+        selectedImageId = null
+        selectedBuyerImageIds = []
+
+        setStatus("Test session loaded. Local images must be added again.")
+        render()
+      } catch (error) {
+        setStatus("Saved session could not be loaded")
+      }
+    }
+
+    function clearSavedSession() {
+      localStorage.removeItem(STORAGE_KEY)
+      setStatus("Saved test session cleared")
     }
 
     function money(value) {
@@ -1397,3 +1488,4 @@
   </script>
 </body>
 </html>
+
