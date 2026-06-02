@@ -36,7 +36,8 @@
     }
 
     button,
-    input {
+    input,
+    select {
       font: inherit;
     }
 
@@ -231,7 +232,8 @@
       font-weight: 850;
     }
 
-    input {
+    input,
+    select {
       width: 100%;
       border: 0;
       border-radius: var(--radius-sm);
@@ -242,7 +244,8 @@
       box-shadow: inset 0 0 0 1px var(--line);
     }
 
-    input:focus {
+    input:focus,
+    select:focus {
       box-shadow: inset 0 0 0 2px rgba(200, 162, 74, 0.7);
     }
 
@@ -430,17 +433,55 @@
     }
 
     .image-card::after {
-      content: "FOTODECK";
+      content: "";
       position: absolute;
-      left: 10px;
-      bottom: 9px;
-      padding: 5px 8px;
+      z-index: 3;
+      pointer-events: none;
+      display: none;
+      min-width: 112px;
+      padding: 6px 14px;
       border-radius: 999px;
       background: rgba(255, 255, 255, 0.82);
       color: #111111;
       font-size: 0.62rem;
       font-weight: 950;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.08em;
+      text-align: center;
+    }
+
+    .image-card.watermark-top::after,
+    .image-card.watermark-middle::after,
+    .image-card.watermark-bottom::after,
+    .image-card.watermark-diagonal::after {
+      content: "FOTODECK";
+      display: block;
+    }
+
+    .image-card.watermark-top::after {
+      top: 9px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .image-card.watermark-middle::after {
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .image-card.watermark-bottom::after {
+      left: 10px;
+      bottom: 9px;
+    }
+
+    .image-card.watermark-diagonal::after {
+      top: 50%;
+      left: 50%;
+      width: 145%;
+      text-align: center;
+      border-radius: 0;
+      background: rgba(255, 255, 255, 0.7);
+      transform: translate(-50%, -50%) rotate(-34deg);
     }
 
     .image-card img {
@@ -767,6 +808,17 @@
                 Image price
                 <input id="priceInput" type="text" value="NZ$7.00" onblur="syncPrice()" onkeydown="handlePriceKey(event)">
               </label>
+
+              <label>
+                Watermark position
+                <select id="watermarkInput" onchange="syncWatermark()">
+                  <option value="none">None</option>
+                  <option value="top">Horizontal top</option>
+                  <option value="middle">Horizontal middle</option>
+                  <option value="bottom">Horizontal bottom</option>
+                  <option value="diagonal">Diagonal corner to corner</option>
+                </select>
+              </label>
             </div>
           </section>
 
@@ -816,8 +868,8 @@
           <div id="adminImageArea"></div>
 
           <div class="button-row">
-            <button class="button" onclick="setCover()">Set selected as Cover</button>
-            <button class="button" onclick="setHero()">Set selected as Hero</button>
+            <button class="button" onclick="setCover()">Set / clear Cover</button>
+            <button class="button" onclick="setHero()">Set / clear Hero</button>
           </div>
         </section>
 
@@ -909,6 +961,7 @@
           id: "gallery-1",
           name: "Saturday Morning Session",
           price: 7,
+          watermarkPosition: "bottom",
           coverImageId: null,
           heroImageId: null,
           images: []
@@ -935,6 +988,7 @@
             id: gallery.id,
             name: gallery.name,
             price: gallery.price,
+            watermarkPosition: gallery.watermarkPosition || "none",
             coverImageId: null,
             heroImageId: null,
             images: []
@@ -974,7 +1028,8 @@
               return {
                 id: gallery.id || createId("gallery"),
                 name: gallery.name || "Gallery",
-                price: Number(gallery.price || 7),
+                price: Number(gallery.price ?? 7),
+                watermarkPosition: gallery.watermarkPosition || "none",
                 coverImageId: null,
                 heroImageId: null,
                 images: []
@@ -985,6 +1040,7 @@
                 id: "gallery-1",
                 name: "Gallery",
                 price: 7,
+                watermarkPosition: "none",
                 coverImageId: null,
                 heroImageId: null,
                 images: []
@@ -1094,15 +1150,6 @@
         }
 
         gallery.images.push(image)
-
-        if (!gallery.coverImageId) {
-          gallery.coverImageId = image.id
-        }
-
-        if (!gallery.heroImageId) {
-          gallery.heroImageId = image.id
-        }
-
         selectedImageId = image.id
       })
 
@@ -1134,15 +1181,36 @@
       const raw = priceInput.value
       const value = Number(String(raw).replace(/[^0-9.]/g, ""))
 
-      if (!Number.isFinite(value) || value <= 0) {
+      if (!Number.isFinite(value) || value < 0) {
         priceInput.value = `NZ$${gallery.price.toFixed(2)}`
         setStatus("Price unchanged")
         return
       }
 
       gallery.price = value
+
+      if (gallery.price === 0) {
+        gallery.watermarkPosition = "none"
+      }
+
       priceInput.value = `NZ$${gallery.price.toFixed(2)}`
       setStatus(`Price set to ${money(gallery.price)}`)
+      render()
+    }
+
+    function syncWatermark() {
+      const gallery = getGallery()
+
+      if (gallery.price === 0) {
+        gallery.watermarkPosition = "none"
+        document.getElementById("watermarkInput").value = "none"
+        setStatus("No watermark on free images")
+        render()
+        return
+      }
+
+      gallery.watermarkPosition = document.getElementById("watermarkInput").value || "none"
+      setStatus(`Watermark set to ${gallery.watermarkPosition}`)
       render()
     }
 
@@ -1151,6 +1219,7 @@
         id: createId("gallery"),
         name: "New Gallery",
         price: 7,
+        watermarkPosition: "bottom",
         coverImageId: null,
         heroImageId: null,
         images: []
@@ -1181,6 +1250,13 @@
         return
       }
 
+      if (gallery.coverImageId === selectedImageId) {
+        gallery.coverImageId = null
+        setStatus("Cover image cleared")
+        render()
+        return
+      }
+
       gallery.coverImageId = selectedImageId
       setStatus("Cover image selected")
       render()
@@ -1191,6 +1267,13 @@
 
       if (!selectedImageId) {
         setStatus("Select an image first")
+        return
+      }
+
+      if (gallery.heroImageId === selectedImageId) {
+        gallery.heroImageId = null
+        setStatus("Hero image cleared")
+        render()
         return
       }
 
@@ -1210,11 +1293,11 @@
       gallery.images = gallery.images.filter((image) => image.id !== selectedImageId)
 
       if (gallery.coverImageId === selectedImageId) {
-        gallery.coverImageId = gallery.images[0] ? gallery.images[0].id : null
+        gallery.coverImageId = null
       }
 
       if (gallery.heroImageId === selectedImageId) {
-        gallery.heroImageId = gallery.images[0] ? gallery.images[0].id : null
+        gallery.heroImageId = null
       }
 
       selectedBuyerImageIds = selectedBuyerImageIds.filter((id) => id !== selectedImageId)
@@ -1320,12 +1403,16 @@
         button.classList.add("selected")
       }
 
-      if (image.id === gallery.coverImageId) {
+      if (mode === "admin" && image.id === gallery.coverImageId) {
         button.classList.add("cover")
       }
 
-      if (image.id === gallery.heroImageId) {
+      if (mode === "admin" && image.id === gallery.heroImageId) {
         button.classList.add("hero-image")
+      }
+
+      if (gallery.watermarkPosition && gallery.watermarkPosition !== "none") {
+        button.classList.add(`watermark-${gallery.watermarkPosition}`)
       }
 
       button.innerHTML = `<img src="${image.url}" alt="${image.name}">`
@@ -1430,6 +1517,17 @@
       document.getElementById("collectionInput").value = state.collectionName
       document.getElementById("galleryInput").value = gallery.name
       document.getElementById("priceInput").value = `NZ$${gallery.price.toFixed(2)}`
+
+      const watermarkInput = document.getElementById("watermarkInput")
+
+      if (gallery.price === 0) {
+        gallery.watermarkPosition = "none"
+        watermarkInput.value = "none"
+        watermarkInput.disabled = true
+      } else {
+        watermarkInput.disabled = false
+        watermarkInput.value = gallery.watermarkPosition || "none"
+      }
       document.getElementById("collectionTitle").textContent = state.collectionName
       document.getElementById("galleryTitle").textContent = gallery.name
       document.getElementById("galleryMeta").textContent = `${gallery.images.length} buyer-ready images`
@@ -1488,4 +1586,8 @@
   </script>
 </body>
 </html>
+
+
+
+
 
