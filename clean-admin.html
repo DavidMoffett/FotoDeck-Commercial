@@ -249,6 +249,51 @@
       box-shadow: inset 0 0 0 2px rgba(200, 162, 74, 0.7);
     }
 
+    input:disabled,
+    select:disabled,
+    .button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .field-note {
+      margin-top: -2px;
+      color: var(--muted);
+      font-size: 0.74rem;
+      line-height: 1.3;
+      font-weight: 800;
+    }
+
+    .payment-box {
+      border-radius: var(--radius-sm);
+      background: #fff1f0;
+      color: #991b1b;
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+      font-size: 0.84rem;
+      line-height: 1.35;
+      font-weight: 850;
+    }
+
+    .payment-box.connected {
+      background: #e8f5ee;
+      color: var(--good);
+    }
+
+    .payment-box strong {
+      display: block;
+      color: inherit;
+      font-size: 0.88rem;
+      letter-spacing: -0.02em;
+    }
+
+    .payment-box span {
+      display: block;
+      color: inherit;
+      opacity: 0.82;
+    }
+
     .upload-drop {
       min-height: 330px;
       display: grid;
@@ -457,7 +502,7 @@
     .image-card.watermark-middle::after,
     .image-card.watermark-bottom::after,
     .image-card.watermark-diagonal::after {
-      content: "FOTODECK";
+      content: attr(data-watermark-text);
       display: block;
     }
 
@@ -486,6 +531,18 @@
       border-radius: 0;
       background: rgba(255, 255, 255, 0.7);
       transform: translate(-50%, -50%) rotate(-34deg);
+    }
+
+    .image-card.watermark-opacity-20::after {
+      opacity: 0.2;
+    }
+
+    .image-card.watermark-opacity-40::after {
+      opacity: 0.4;
+    }
+
+    .image-card.watermark-opacity-60::after {
+      opacity: 0.6;
     }
 
     .image-card img {
@@ -841,7 +898,7 @@
           <button class="button" onclick="clearSavedSession()">Clear saved</button>
           <button class="button" onclick="openStats()">Stats</button>
           <button class="button" onclick="openBuyer()">Open buyer view</button>
-          <button class="button gold" onclick="setStatus('Buyer link copied')">Share buyer link</button>
+          <button class="button gold" onclick="shareBuyerLink()">Share buyer link</button>
           <button class="button dark" onclick="triggerUpload()">Add photos</button>
         </div>
       </header>
@@ -880,19 +937,43 @@
                 <input id="galleryInput" type="text" value="Saturday Morning Session" oninput="syncNames()">
               </label>
 
+              <div class="payment-box" id="paymentBox">
+                <div>
+                  <strong id="paymentStatusTitle">Payments not connected</strong>
+                  <span id="paymentStatusText">Connect Stripe before setting paid prices or sharing paid buyer links.</span>
+                </div>
+
+                <button class="button dark" id="stripeConnectButton" onclick="toggleStripeConnection()">Connect Stripe</button>
+              </div>
+
               <label>
                 Image price
-                <input id="priceInput" type="text" value="NZ$7.00" onblur="syncPrice()" onkeydown="handlePriceKey(event)">
+                <input id="priceInput" type="text" value="NZ$0.00" onblur="syncPrice()" onkeydown="handlePriceKey(event)">
+                <span class="field-note" id="priceGateText">Connect Stripe before setting paid prices.</span>
               </label>
 
               <label>
-                Watermark position
+                Fotomark name
+                <input id="watermarkTextInput" type="text" value="FOTODECK" oninput="syncWatermarkText()">
+              </label>
+
+              <label>
+                Fotomark position
                 <select id="watermarkInput" onchange="syncWatermark()">
                   <option value="none">None</option>
                   <option value="top">Horizontal top</option>
                   <option value="middle">Horizontal middle</option>
                   <option value="bottom">Horizontal bottom</option>
                   <option value="diagonal">Diagonal corner to corner</option>
+                </select>
+              </label>
+
+              <label>
+                Fotomark strength
+                <select id="watermarkOpacityInput" onchange="syncWatermarkOpacity()">
+                  <option value="20">20%</option>
+                  <option value="40">40%</option>
+                  <option value="60">60%</option>
                 </select>
               </label>
             </div>
@@ -1050,13 +1131,16 @@
   <script>
     const state = {
       collectionName: "Northside Photography",
+      stripeConnected: false,
       selectedGalleryId: "gallery-1",
       galleries: [
         {
           id: "gallery-1",
           name: "Saturday Morning Session",
-          price: 7,
-          watermarkPosition: "bottom",
+          price: 0,
+          watermarkPosition: "none",
+          watermarkText: "FOTODECK",
+          watermarkOpacity: 40,
           coverImageId: null,
           heroImageId: null,
           images: []
@@ -1078,6 +1162,7 @@
     function makeSessionCopy() {
       return {
         collectionName: state.collectionName,
+        stripeConnected: state.stripeConnected,
         selectedGalleryId: state.selectedGalleryId,
         galleries: state.galleries.map((gallery) => {
           return {
@@ -1085,6 +1170,8 @@
             name: gallery.name,
             price: gallery.price,
             watermarkPosition: gallery.watermarkPosition || "none",
+            watermarkText: gallery.watermarkText || "FOTODECK",
+            watermarkOpacity: Number(gallery.watermarkOpacity || 40),
             coverImageId: null,
             heroImageId: null,
             images: []
@@ -1119,13 +1206,16 @@
         const data = JSON.parse(saved)
 
         state.collectionName = data.collectionName || "Collection"
+        state.stripeConnected = Boolean(data.stripeConnected)
         state.galleries = Array.isArray(data.galleries) && data.galleries.length > 0
           ? data.galleries.map((gallery) => {
               return {
                 id: gallery.id || createId("gallery"),
                 name: gallery.name || "Gallery",
-                price: Number(gallery.price ?? 7),
+                price: Number(gallery.price ?? 0),
                 watermarkPosition: gallery.watermarkPosition || "none",
+                watermarkText: gallery.watermarkText || "FOTODECK",
+                watermarkOpacity: Number(gallery.watermarkOpacity || 40),
                 coverImageId: null,
                 heroImageId: null,
                 images: []
@@ -1135,8 +1225,10 @@
               {
                 id: "gallery-1",
                 name: "Gallery",
-                price: 7,
+                price: 0,
                 watermarkPosition: "none",
+                watermarkText: "FOTODECK",
+                watermarkOpacity: 40,
                 coverImageId: null,
                 heroImageId: null,
                 images: []
@@ -1186,6 +1278,57 @@
 
     function setStatus(message) {
       document.getElementById("statusText").textContent = message
+    }
+
+    function enforcePaymentRules() {
+      state.galleries.forEach((gallery) => {
+        gallery.watermarkOpacity = Number(gallery.watermarkOpacity || 40)
+
+        if (!state.stripeConnected) {
+          gallery.price = 0
+          gallery.watermarkPosition = "none"
+          return
+        }
+
+        if (gallery.price === 0) {
+          gallery.watermarkPosition = "none"
+        }
+      })
+    }
+
+    function toggleStripeConnection() {
+      state.stripeConnected = !state.stripeConnected
+
+      if (state.stripeConnected) {
+        const gallery = getGallery()
+
+        if (gallery.price === 0) {
+          gallery.price = 7
+        }
+
+        if (!gallery.watermarkPosition || gallery.watermarkPosition === "none") {
+          gallery.watermarkPosition = "bottom"
+        }
+
+        gallery.watermarkOpacity = Number(gallery.watermarkOpacity || 40)
+        setStatus("Stripe connected for test model")
+      } else {
+        selectedBuyerImageIds = []
+        setStatus("Stripe disconnected. Paid selling disabled.")
+      }
+
+      render()
+    }
+
+    function shareBuyerLink() {
+      const gallery = getGallery()
+
+      if (gallery.price > 0 && !state.stripeConnected) {
+        setStatus("Connect Stripe before sharing a paid buyer link")
+        return
+      }
+
+      setStatus(gallery.price > 0 ? "Paid buyer link copied" : "Free buyer link copied")
     }
 
     function triggerUpload() {
@@ -1277,6 +1420,15 @@
       const raw = priceInput.value
       const value = Number(String(raw).replace(/[^0-9.]/g, ""))
 
+      if (!state.stripeConnected) {
+        gallery.price = 0
+        gallery.watermarkPosition = "none"
+        priceInput.value = "NZ$0.00"
+        setStatus("Connect Stripe before setting paid prices")
+        render()
+        return
+      }
+
       if (!Number.isFinite(value) || value < 0) {
         priceInput.value = `NZ$${gallery.price.toFixed(2)}`
         setStatus("Price unchanged")
@@ -1294,19 +1446,52 @@
       render()
     }
 
+    function syncWatermarkText() {
+      const gallery = getGallery()
+
+      if (gallery.price === 0) {
+        gallery.watermarkText = "FOTODECK"
+        document.getElementById("watermarkTextInput").value = "FOTODECK"
+        setStatus("No fotomark name on free images")
+        render()
+        return
+      }
+
+      gallery.watermarkText = document.getElementById("watermarkTextInput").value || "FOTODECK"
+      setStatus(`Fotomark name set to ${gallery.watermarkText}`)
+      render()
+    }
+
     function syncWatermark() {
       const gallery = getGallery()
 
       if (gallery.price === 0) {
         gallery.watermarkPosition = "none"
         document.getElementById("watermarkInput").value = "none"
-        setStatus("No watermark on free images")
+        setStatus("No fotomark on free images")
         render()
         return
       }
 
       gallery.watermarkPosition = document.getElementById("watermarkInput").value || "none"
-      setStatus(`Watermark set to ${gallery.watermarkPosition}`)
+      gallery.watermarkOpacity = Number(gallery.watermarkOpacity || 40)
+      setStatus(`Fotomark set to ${gallery.watermarkPosition}`)
+      render()
+    }
+
+    function syncWatermarkOpacity() {
+      const gallery = getGallery()
+
+      if (gallery.price === 0) {
+        gallery.watermarkOpacity = 40
+        document.getElementById("watermarkOpacityInput").value = "40"
+        setStatus("No fotomark strength on free images")
+        render()
+        return
+      }
+
+      gallery.watermarkOpacity = Number(document.getElementById("watermarkOpacityInput").value || 40)
+      setStatus(`Fotomark strength set to ${gallery.watermarkOpacity}%`)
       render()
     }
 
@@ -1314,8 +1499,10 @@
       const gallery = {
         id: createId("gallery"),
         name: "New Gallery",
-        price: 7,
-        watermarkPosition: "bottom",
+        price: state.stripeConnected ? 7 : 0,
+        watermarkPosition: state.stripeConnected ? "bottom" : "none",
+        watermarkText: "FOTODECK",
+        watermarkOpacity: 40,
         coverImageId: null,
         heroImageId: null,
         images: []
@@ -1504,6 +1691,11 @@
     function mockCheckout() {
       const gallery = getGallery()
 
+      if (gallery.price > 0 && !state.stripeConnected) {
+        alert("Connect Stripe before taking paid orders.")
+        return
+      }
+
       if (selectedBuyerImageIds.length === 0) {
         alert("Select at least one image first.")
         return
@@ -1556,6 +1748,8 @@
 
       if (gallery.watermarkPosition && gallery.watermarkPosition !== "none") {
         button.classList.add(`watermark-${gallery.watermarkPosition}`)
+        button.classList.add(`watermark-opacity-${Number(gallery.watermarkOpacity || 40)}`)
+        button.setAttribute("data-watermark-text", gallery.watermarkText || "FOTODECK")
       }
 
       button.innerHTML = `<img src="${image.url}" alt="${image.name}">`
@@ -1650,6 +1844,8 @@
     }
 
     function render() {
+      enforcePaymentRules()
+
       const gallery = getGallery()
       const hero = getHero(gallery)
 
@@ -1659,17 +1855,47 @@
 
       document.getElementById("collectionInput").value = state.collectionName
       document.getElementById("galleryInput").value = gallery.name
-      document.getElementById("priceInput").value = `NZ$${gallery.price.toFixed(2)}`
 
+      const priceInput = document.getElementById("priceInput")
+      const paymentBox = document.getElementById("paymentBox")
+      const paymentStatusTitle = document.getElementById("paymentStatusTitle")
+      const paymentStatusText = document.getElementById("paymentStatusText")
+      const stripeConnectButton = document.getElementById("stripeConnectButton")
+      const priceGateText = document.getElementById("priceGateText")
       const watermarkInput = document.getElementById("watermarkInput")
+      const watermarkTextInput = document.getElementById("watermarkTextInput")
+      const watermarkOpacityInput = document.getElementById("watermarkOpacityInput")
+
+      priceInput.value = `NZ$${gallery.price.toFixed(2)}`
+      priceInput.disabled = !state.stripeConnected
+
+      paymentBox.classList.toggle("connected", state.stripeConnected)
+      paymentStatusTitle.textContent = state.stripeConnected ? "Payments connected" : "Payments not connected"
+      paymentStatusText.textContent = state.stripeConnected
+        ? "Paid prices and paid buyer links are available in this test model."
+        : "Connect Stripe before setting paid prices or sharing paid buyer links."
+      stripeConnectButton.textContent = state.stripeConnected ? "Disconnect Stripe" : "Connect Stripe"
+      priceGateText.textContent = state.stripeConnected
+        ? "Set NZ$0 for a free gallery. Fotomark is only available on paid images."
+        : "Connect Stripe before setting paid prices."
 
       if (gallery.price === 0) {
         gallery.watermarkPosition = "none"
+        gallery.watermarkText = "FOTODECK"
+        gallery.watermarkOpacity = 40
+        watermarkTextInput.value = "FOTODECK"
+        watermarkTextInput.disabled = true
         watermarkInput.value = "none"
         watermarkInput.disabled = true
+        watermarkOpacityInput.value = "40"
+        watermarkOpacityInput.disabled = true
       } else {
+        watermarkTextInput.disabled = false
+        watermarkTextInput.value = gallery.watermarkText || "FOTODECK"
         watermarkInput.disabled = false
         watermarkInput.value = gallery.watermarkPosition || "none"
+        watermarkOpacityInput.disabled = gallery.watermarkPosition === "none"
+        watermarkOpacityInput.value = String(gallery.watermarkOpacity || 40)
       }
       document.getElementById("collectionTitle").textContent = state.collectionName
       document.getElementById("galleryTitle").textContent = gallery.name
@@ -1730,9 +1956,3 @@
   </script>
 </body>
 </html>
-
-
-
-
-
-
